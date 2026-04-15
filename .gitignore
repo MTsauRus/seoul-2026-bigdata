@@ -1,2 +1,12 @@
 venv
 cache
+.env
+
+# 대용량 데이터 (로컬에만 보관)
+data/LOCAL_PEOPLE_20260409.csv
+data/bnd_oa_11_2025_2Q/
+
+# 산출물 (재생성 가능)
+output/
+.DS_Store
+**/.DS_Store
