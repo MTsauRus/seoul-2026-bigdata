@@ -1,12 +1,34 @@
-venv
-cache
+venv/
+bigdata/
+cache/
 .env
 
-# 대용량 데이터 (로컬에만 보관)
+# ── 대용량 원본 데이터 (로컬에만 보관) ──────────────────────────────
 data/LOCAL_PEOPLE_20260409.csv
 data/bnd_oa_11_2025_2Q/
 
-# 산출물 (재생성 가능)
+# senior_access — raw 원본 및 중간 산물 (용량 큼, 재생성 가능)
+senior_access/data/raw/
+senior_access/data/interim/
+senior_access/data/processed/
+
+# GeoJSON 대용량 출력물 (재생성 가능)
+senior_access/outputs/interactive/*.geojson
+senior_access/outputs/interactive/sgg_stats.json
+
+# 이소크론 캐시
+senior_access/.cache/
+
+# seoul_data_hub raw 파일 (원본, 로컬에만 보관)
+senior_access/data/raw/seoul_data_hub/
+
+# ── 기타 ────────────────────────────────────────────────────────────
 output/
+trash/
 .DS_Store
 **/.DS_Store
+*.pkl
+*.gpkg
+**/__pycache__/
+*.pyc
+*.pyo
