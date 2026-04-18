@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_55cf9472a64b24897b84c186950c1c97 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+<div style="
+    position:fixed; bottom:20px; left:16px; z-index:9999;
+    background:rgba(15,15,25,0.93); border:1px solid #333;
+    border-radius:10px; padding:16px 20px;
+    font-family:'AppleGothic','Malgun Gothic',sans-serif;
+    color:#eee; min-width:280px; max-width:320px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.6);">
+  <div style="font-size:17px;font-weight:bold;color:#fff;margin-bottom:4px;">
+    같은 30분, 다른 서울
+  </div>
+  <div style="font-size:11px;color:#aaa;margin-bottom:12px;">
+    출발점: <b style="color:#fff">길동사거리</b>
+    &nbsp;|&nbsp; 강동구 길동 (동별 65세+ 1위)
+  </div>
+
+  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <tr>
+      <td style="padding:4px 0;">
+        <span style="color:#00C8FF;font-size:15px;">■</span>
+        일반인 (1.28 m/s)
+      </td>
+      <td style="text-align:right;color:#ccc;">
+        15분 2.67 km² / 30분 10.74 km²
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:4px 0;">
+        <span style="color:#FF3C3C;font-size:15px;">■</span>
+        보행보조장치 (0.88 m/s)
+      </td>
+      <td style="text-align:right;color:#ccc;">
+        15분 1.27 km² / 30분 5.17 km²
+      </td>
+    </tr>
+    <tr style="border-top:1px solid #333;margin-top:6px;">
+      <td style="padding:8px 0 4px;color:#FFB800;font-weight:bold;">
+        🟡 잃어버린 영역
+      </td>
+      <td style="text-align:right;color:#FFB800;font-weight:bold;">
+        5.57 km²
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding:2px 0 10px;font-size:13px;color:#FF6060;font-weight:bold;">
+        ▼ 면적 손실률: 15분 52.6% · 30분 51.8%
+      </td>
+    </tr>
+  </table>
+
+  <div style="border-top:1px solid #333;padding-top:10px;font-size:11px;">
+    <div style="margin-bottom:4px;color:#bbb;">🚇 반경 내 지하철역 접근성</div>
+    <span style="color:#00FF88;">●</span> 둘 다 가능: <b>4개역</b>&nbsp;&nbsp;
+    <span style="color:#FFD700;">●</span> 일반인만: <b>3개역</b>&nbsp;&nbsp;
+    <span style="color:#888;">●</span> 둘 다 불가: <b>3개역</b>
+  </div>
+
+  <div style="border-top:1px solid #333;padding-top:8px;margin-top:8px;
+              font-size:10px;color:#666;">
+    출처: 한음 외 (2020). 한국ITS학회 19(4). n=4,857<br>
+    보행 그래프: © OpenStreetMap contributors (osmnx 2.1.0)
+  </div>
+</div>
+    
+<div style="
+    position:fixed; top:10px; left:50%; transform:translateX(-50%);
+    z-index:9999; background:rgba(10,10,20,0.92);
+    border:1px solid #444; border-radius:8px;
+    padding:10px 24px; text-align:center;
+    font-family:'AppleGothic','Malgun Gothic',sans-serif;
+    box-shadow:0 2px 12px rgba(0,0,0,0.5);">
+  <div style="font-size:18px;font-weight:bold;color:#fff;">
+    같은 30분, 다른 서울
+  </div>
+  <div style="font-size:11px;color:#aaa;margin-top:3px;">
+    시각화 방법 A — Folium (Leaflet.js) &nbsp;|&nbsp;
+    출발점: 길동사거리 · 강동구 길동 &nbsp;|&nbsp;
+    일반인 <span style="color:#00C8FF">■</span> 1.28 m/s
+    vs 보행보조장치 <span style="color:#FF3C3C">■</span> 0.88 m/s
+  </div>
+</div>
+    
+            <div class="folium-map" id="map_55cf9472a64b24897b84c186950c1c97" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_55cf9472a64b24897b84c186950c1c97 = L.map(
+                "map_55cf9472a64b24897b84c186950c1c97",
+                {
+                    center: [37.5415, 127.1435],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 13,
+  "zoomControl": true,
+  "preferCanvas": true,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_d9571ed803a4c4b1785c90867798a4a5 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 20,
+  "maxNativeZoom": 20,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors \u0026copy; \u003ca href=\"https://carto.com/attributions\"\u003eCARTO\u003c/a\u003e",
+  "subdomains": "abcd",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_d9571ed803a4c4b1785c90867798a4a5.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var feature_group_05f301571577ebab68f62bebbc2462c9 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var polygon_c16d095a6cd9f26d7fd33fa8f7db1d72 = L.polygon(
+                [[37.5227164, 127.1459377], [37.5228177, 127.1404062], [37.5231825, 127.1345102], [37.5265779, 127.1301049], [37.5283133, 127.1286587], [37.534749, 127.1242745], [37.5400861, 127.1208799], [37.5409787, 127.1203859], [37.5421551, 127.1201715], [37.5427779, 127.1200725], [37.5465766, 127.1203651], [37.5467077, 127.1204189], [37.5468483, 127.1204767], [37.5514762, 127.1236694], [37.5519673, 127.1240977], [37.5579705, 127.1373257], [37.5603089, 127.1434768], [37.5588436, 127.1489863], [37.5571096, 127.1521118], [37.5551577, 127.1549865], [37.5512712, 127.1594006], [37.5501918, 127.1602611], [37.5458539, 127.162558], [37.5415439, 127.1601879], [37.5277718, 127.1517181], [37.5227216, 127.1461006], [37.5227164, 127.1459377]],
+                {"bubblingMouseEvents": true, "color": "#00C8FF", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#00C8FF", "fillOpacity": 0.18, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_05f301571577ebab68f62bebbc2462c9);
+        
+    
+            polygon_c16d095a6cd9f26d7fd33fa8f7db1d72.bindTooltip(
+                `<div>
+                     일반인 30분 도달 범위 (1.28 m/s)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_05f301571577ebab68f62bebbc2462c9.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var feature_group_35563a26c9bfc36582e7d259de73a2f5 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var polygon_ae2327c19329a8d43959660c13a150e1 = L.polygon(
+                [[37.5323935, 127.1415601], [37.5333965, 127.1383467], [37.5344208, 127.1372737], [37.5375015, 127.1340986], [37.5401775, 127.132171], [37.5432073, 127.1315233], [37.546649, 127.1343006], [37.5488654, 127.1388358], [37.5501059, 127.1414808], [37.5507929, 127.1439522], [37.550758, 127.1446117], [37.550512, 127.1460141], [37.5501994, 127.1465421], [37.5496441, 127.1473431], [37.5487076, 127.1485283], [37.5478455, 127.1490649], [37.5404823, 127.153514], [37.5388677, 127.1526455], [37.5382144, 127.1522038], [37.5351886, 127.1497864], [37.5350313, 127.1495932], [37.5323935, 127.1415601]],
+                {"bubblingMouseEvents": true, "color": "#00C8FF", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#00C8FF", "fillOpacity": 0.35, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 2.5}
+            ).addTo(feature_group_35563a26c9bfc36582e7d259de73a2f5);
+        
+    
+            polygon_ae2327c19329a8d43959660c13a150e1.bindTooltip(
+                `<div>
+                     일반인 15분 도달 범위 (1.28 m/s)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_35563a26c9bfc36582e7d259de73a2f5.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var feature_group_f1036ba8cbca1c809c76b9cefd168b90 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var polygon_65c896fc646e1c9ddf19fcceb2fec680 = L.polygon(
+                [[37.5284743, 127.1424947], [37.5288434, 127.1388891], [37.5301444, 127.1362746], [37.5330234, 127.1332197], [37.5347773, 127.1318221], [37.5403205, 127.1278692], [37.5432924, 127.1268898], [37.5451392, 127.1280784], [37.5488227, 127.1305756], [37.5511143, 127.1355393], [37.5546988, 127.144413], [37.5545431, 127.1463446], [37.5544755, 127.1465856], [37.5526777, 127.1486824], [37.5476917, 127.1544715], [37.5462172, 127.1559794], [37.5372631, 127.155568], [37.5365008, 127.1547627], [37.532826, 127.1505923], [37.5287246, 127.1435936], [37.5286904, 127.1434782], [37.5284743, 127.1424947]],
+                {"bubblingMouseEvents": true, "color": "#FF3C3C", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FF3C3C", "fillOpacity": 0.25, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.8, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_f1036ba8cbca1c809c76b9cefd168b90);
+        
+    
+            polygon_65c896fc646e1c9ddf19fcceb2fec680.bindTooltip(
+                `<div>
+                     보행보조장치 30분 도달 범위 (0.88 m/s)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_f1036ba8cbca1c809c76b9cefd168b90.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var feature_group_56121d83aac246574c3c168f2f4ed0b3 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var polygon_9af5ff0d47c66d22a964d302cd039c22 = L.polygon(
+                [[37.5347543, 127.1411374], [37.5355311, 127.1399507], [37.5366214, 127.1387958], [37.5405421, 127.1356078], [37.5414195, 127.13522], [37.5428384, 127.1355571], [37.5445568, 127.1368564], [37.5453615, 127.1375005], [37.5477312, 127.1441635], [37.547697, 127.1455349], [37.5471063, 127.1460851], [37.5445865, 127.1482032], [37.5425543, 127.1496331], [37.540447, 127.1505459], [37.5379922, 127.1480952], [37.5372266, 127.1471018], [37.5355183, 127.143619], [37.5347543, 127.1411374]],
+                {"bubblingMouseEvents": true, "color": "#FF3C3C", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FF3C3C", "fillOpacity": 0.45, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 2.5}
+            ).addTo(feature_group_56121d83aac246574c3c168f2f4ed0b3);
+        
+    
+            polygon_9af5ff0d47c66d22a964d302cd039c22.bindTooltip(
+                `<div>
+                     보행보조장치 15분 도달 범위 (0.88 m/s)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_56121d83aac246574c3c168f2f4ed0b3.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var feature_group_14502ab7d8077ca55b61c99db1cbe901 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var polygon_d8dd3828a01b21533969de5888baeccc = L.polygon(
+                [[37.5228177, 127.1404062], [37.5231825, 127.1345102], [37.5265779, 127.1301049], [37.5283133, 127.1286587], [37.534749, 127.1242745], [37.5400861, 127.1208799], [37.5409787, 127.1203859], [37.5421551, 127.1201715], [37.5427779, 127.1200725], [37.5465766, 127.1203651], [37.5467077, 127.1204189], [37.5468483, 127.1204767], [37.5514762, 127.1236694], [37.5519673, 127.1240977], [37.5579705, 127.1373257], [37.5603089, 127.1434768], [37.5588436, 127.1489863], [37.5571096, 127.1521118], [37.5551577, 127.1549865], [37.5512712, 127.1594006], [37.5501918, 127.1602611], [37.5458539, 127.162558], [37.5415439, 127.1601879], [37.5277718, 127.1517181], [37.5227216, 127.1461006], [37.5227164, 127.1459377], [37.5228177, 127.1404062]],
+                {"bubblingMouseEvents": true, "color": "#FFB800", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFB800", "fillOpacity": 0.5, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.9, "smoothFactor": 1.0, "stroke": true, "weight": 2}
+            ).addTo(feature_group_14502ab7d8077ca55b61c99db1cbe901);
+        
+    
+            polygon_d8dd3828a01b21533969de5888baeccc.bindTooltip(
+                `<div>
+                     ⚠️ 잃어버린 영역<br>일반인은 도달 가능, 보행보조장치 노인은 불가<br>전체 면적: 5.57 km²
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_14502ab7d8077ca55b61c99db1cbe901.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var feature_group_70f967e3407ab21f8078ed0b4a585524 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_5d156019d9ae9285df32689c2ae3dda5 = L.circleMarker(
+                [37.53837, 127.1402],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#00FF88", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_ccd6cfce1a19a6760cd3270456a7953d = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_87f5dcd5467da1e37dd82b7d9854d91c = $(`<div id="html_87f5dcd5467da1e37dd82b7d9854d91c" style="width: 100.0%; height: 100.0%;"><b>길동역(5호선)</b><br>✅ 둘 다 30분 내 도달<br><span style='font-size:11px;color:#555'>경도: 127.14020<br>위도: 37.53837</span></div>`)[0];
+                popup_ccd6cfce1a19a6760cd3270456a7953d.setContent(html_87f5dcd5467da1e37dd82b7d9854d91c);
+            
+        
+
+        circle_marker_5d156019d9ae9285df32689c2ae3dda5.bindPopup(popup_ccd6cfce1a19a6760cd3270456a7953d)
+        ;
+
+        
+    
+    
+            circle_marker_5d156019d9ae9285df32689c2ae3dda5.bindTooltip(
+                `<div>
+                     <b>길동역(5호선)</b><br>✅ 둘 다 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_28acfed93f032cdc4b0268bb800f555f = L.marker(
+                [37.53837, 127.1402],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_97adbcbb17ccd7ea9f2d7d6439025f73 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#00FF88;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uae38\ub3d9\uc5ed(5\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_28acfed93f032cdc4b0268bb800f555f.setIcon(div_icon_97adbcbb17ccd7ea9f2d7d6439025f73);
+            
+    
+            var circle_marker_a34897a5cdda3892e55cda0c765600ec = L.circleMarker(
+                [37.5358, 127.1326],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#00FF88", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_770e8b2fa069637103b9da07c0bee58e = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_f6baace8ef6e99d475e56945ee9dc1c6 = $(`<div id="html_f6baace8ef6e99d475e56945ee9dc1c6" style="width: 100.0%; height: 100.0%;"><b>강동역(5호선)</b><br>✅ 둘 다 30분 내 도달<br><span style='font-size:11px;color:#555'>경도: 127.13260<br>위도: 37.53580</span></div>`)[0];
+                popup_770e8b2fa069637103b9da07c0bee58e.setContent(html_f6baace8ef6e99d475e56945ee9dc1c6);
+            
+        
+
+        circle_marker_a34897a5cdda3892e55cda0c765600ec.bindPopup(popup_770e8b2fa069637103b9da07c0bee58e)
+        ;
+
+        
+    
+    
+            circle_marker_a34897a5cdda3892e55cda0c765600ec.bindTooltip(
+                `<div>
+                     <b>강동역(5호선)</b><br>✅ 둘 다 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_cfb9d2619b739b4db7d1fb5e5544938f = L.marker(
+                [37.5358, 127.1326],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_11b6ba33ffdb8832b3aae7bc814b3824 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#00FF88;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uac15\ub3d9\uc5ed(5\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_cfb9d2619b739b4db7d1fb5e5544938f.setIcon(div_icon_11b6ba33ffdb8832b3aae7bc814b3824);
+            
+    
+            var circle_marker_4c854ab8b94d03c4843a745a75367b96 = L.circleMarker(
+                [37.53852, 127.1234],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFD700", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_efbfb3201283388c4c4094e390682734 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_aa0fac83eb5a778bd2ce2bd54ce95b51 = $(`<div id="html_aa0fac83eb5a778bd2ce2bd54ce95b51" style="width: 100.0%; height: 100.0%;"><b>천호역(5/8호선)</b><br>⚠️ 일반인만 30분 내 도달<br><span style='font-size:11px;color:#555'>경도: 127.12340<br>위도: 37.53852</span></div>`)[0];
+                popup_efbfb3201283388c4c4094e390682734.setContent(html_aa0fac83eb5a778bd2ce2bd54ce95b51);
+            
+        
+
+        circle_marker_4c854ab8b94d03c4843a745a75367b96.bindPopup(popup_efbfb3201283388c4c4094e390682734)
+        ;
+
+        
+    
+    
+            circle_marker_4c854ab8b94d03c4843a745a75367b96.bindTooltip(
+                `<div>
+                     <b>천호역(5/8호선)</b><br>⚠️ 일반인만 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_65b5a0fa634d85037e1971c190dab923 = L.marker(
+                [37.53852, 127.1234],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_afe32cb2d09ce4e1e65b52f41ab4cec5 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#FFD700;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\ucc9c\ud638\uc5ed(5/8\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_65b5a0fa634d85037e1971c190dab923.setIcon(div_icon_afe32cb2d09ce4e1e65b52f41ab4cec5);
+            
+    
+            var circle_marker_2894a1f009ef4661b30ce4814946a74c = L.circleMarker(
+                [37.54564, 127.14296],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#00FF88", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_5ac2138786897a9d2852ef916b7273a6 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_8399ade26584b7c5b96dcc7bf528c8a4 = $(`<div id="html_8399ade26584b7c5b96dcc7bf528c8a4" style="width: 100.0%; height: 100.0%;"><b>굽은다리역(5호선)</b><br>✅ 둘 다 30분 내 도달<br><span style='font-size:11px;color:#555'>경도: 127.14296<br>위도: 37.54564</span></div>`)[0];
+                popup_5ac2138786897a9d2852ef916b7273a6.setContent(html_8399ade26584b7c5b96dcc7bf528c8a4);
+            
+        
+
+        circle_marker_2894a1f009ef4661b30ce4814946a74c.bindPopup(popup_5ac2138786897a9d2852ef916b7273a6)
+        ;
+
+        
+    
+    
+            circle_marker_2894a1f009ef4661b30ce4814946a74c.bindTooltip(
+                `<div>
+                     <b>굽은다리역(5호선)</b><br>✅ 둘 다 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_cdae0863b3e618f20d60134bef276b83 = L.marker(
+                [37.54564, 127.14296],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_accef32fa53530e3ecf2c0a9f2def91e = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#00FF88;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uad7d\uc740\ub2e4\ub9ac\uc5ed(5\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_cdae0863b3e618f20d60134bef276b83.setIcon(div_icon_accef32fa53530e3ecf2c0a9f2def91e);
+            
+    
+            var circle_marker_a1052315b7a74846a260b5faad499f94 = L.circleMarker(
+                [37.55195, 127.14408],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#00FF88", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_7d87acc28fdb1e8fe0e880ad9737866e = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_915af6dae515d3801d0fb1b3a015afe8 = $(`<div id="html_915af6dae515d3801d0fb1b3a015afe8" style="width: 100.0%; height: 100.0%;"><b>명일역(5호선)</b><br>✅ 둘 다 30분 내 도달<br><span style='font-size:11px;color:#555'>경도: 127.14408<br>위도: 37.55195</span></div>`)[0];
+                popup_7d87acc28fdb1e8fe0e880ad9737866e.setContent(html_915af6dae515d3801d0fb1b3a015afe8);
+            
+        
+
+        circle_marker_a1052315b7a74846a260b5faad499f94.bindPopup(popup_7d87acc28fdb1e8fe0e880ad9737866e)
+        ;
+
+        
+    
+    
+            circle_marker_a1052315b7a74846a260b5faad499f94.bindTooltip(
+                `<div>
+                     <b>명일역(5호선)</b><br>✅ 둘 다 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_a037b89de16c5079227b2ae1d51ddc69 = L.marker(
+                [37.55195, 127.14408],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_4a5749f86777936a06ac20e866beefbe = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#00FF88;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uba85\uc77c\uc5ed(5\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_a037b89de16c5079227b2ae1d51ddc69.setIcon(div_icon_4a5749f86777936a06ac20e866beefbe);
+            
+    
+            var circle_marker_bf354fff3e046ada780c95d23f0d8ce8 = L.circleMarker(
+                [37.53069, 127.12062],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#AAAAAA", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_fa29b562e37cab69ad9faae3ae6baa97 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_456a3efc20cc3495698b13b258f12b86 = $(`<div id="html_456a3efc20cc3495698b13b258f12b86" style="width: 100.0%; height: 100.0%;"><b>강동구청역(8호선)</b><br>❌ 30분 내 도달 불가<br><span style='font-size:11px;color:#555'>경도: 127.12062<br>위도: 37.53069</span></div>`)[0];
+                popup_fa29b562e37cab69ad9faae3ae6baa97.setContent(html_456a3efc20cc3495698b13b258f12b86);
+            
+        
+
+        circle_marker_bf354fff3e046ada780c95d23f0d8ce8.bindPopup(popup_fa29b562e37cab69ad9faae3ae6baa97)
+        ;
+
+        
+    
+    
+            circle_marker_bf354fff3e046ada780c95d23f0d8ce8.bindTooltip(
+                `<div>
+                     <b>강동구청역(8호선)</b><br>❌ 30분 내 도달 불가
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_7c88b3514c0b2bf2c402a4d43e2f6986 = L.marker(
+                [37.53069, 127.12062],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_538426c46fc87dafc9b371b61b0e207e = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#AAAAAA;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uac15\ub3d9\uad6c\uccad\uc5ed(8\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_7c88b3514c0b2bf2c402a4d43e2f6986.setIcon(div_icon_538426c46fc87dafc9b371b61b0e207e);
+            
+    
+            var circle_marker_cdfdefbe45c24dbf999beb54fb7ebf52 = L.circleMarker(
+                [37.55011, 127.12754],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFD700", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_911fbbbe3c8760688fc65f7e1190d8d7 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_0df073d25cc338909c8d2e46bffd9422 = $(`<div id="html_0df073d25cc338909c8d2e46bffd9422" style="width: 100.0%; height: 100.0%;"><b>암사역(8호선)</b><br>⚠️ 일반인만 30분 내 도달<br><span style='font-size:11px;color:#555'>경도: 127.12754<br>위도: 37.55011</span></div>`)[0];
+                popup_911fbbbe3c8760688fc65f7e1190d8d7.setContent(html_0df073d25cc338909c8d2e46bffd9422);
+            
+        
+
+        circle_marker_cdfdefbe45c24dbf999beb54fb7ebf52.bindPopup(popup_911fbbbe3c8760688fc65f7e1190d8d7)
+        ;
+
+        
+    
+    
+            circle_marker_cdfdefbe45c24dbf999beb54fb7ebf52.bindTooltip(
+                `<div>
+                     <b>암사역(8호선)</b><br>⚠️ 일반인만 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_12e486daf65dd08406b25fd006fe4f20 = L.marker(
+                [37.55011, 127.12754],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_c8cb86ce861c574eb19ce47eac9b38af = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#FFD700;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uc554\uc0ac\uc5ed(8\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_12e486daf65dd08406b25fd006fe4f20.setIcon(div_icon_c8cb86ce861c574eb19ce47eac9b38af);
+            
+    
+            var circle_marker_12af5bf64dc8f5197d428cf5e34f7158 = L.circleMarker(
+                [37.5278, 127.13624],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFD700", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_ba458ee4aa946f757cf25f7c0ca556e3 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_f85f4e39a9e167c102af1a5240eec05e = $(`<div id="html_f85f4e39a9e167c102af1a5240eec05e" style="width: 100.0%; height: 100.0%;"><b>둔촌동역(5호선)</b><br>⚠️ 일반인만 30분 내 도달<br><span style='font-size:11px;color:#555'>경도: 127.13624<br>위도: 37.52780</span></div>`)[0];
+                popup_ba458ee4aa946f757cf25f7c0ca556e3.setContent(html_f85f4e39a9e167c102af1a5240eec05e);
+            
+        
+
+        circle_marker_12af5bf64dc8f5197d428cf5e34f7158.bindPopup(popup_ba458ee4aa946f757cf25f7c0ca556e3)
+        ;
+
+        
+    
+    
+            circle_marker_12af5bf64dc8f5197d428cf5e34f7158.bindTooltip(
+                `<div>
+                     <b>둔촌동역(5호선)</b><br>⚠️ 일반인만 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_58e26292f0d85f689d68aa9a21d0fb53 = L.marker(
+                [37.5278, 127.13624],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_184b69e098dc7ba573086749da326e4e = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#FFD700;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\ub454\ucd0c\ub3d9\uc5ed(5\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_58e26292f0d85f689d68aa9a21d0fb53.setIcon(div_icon_184b69e098dc7ba573086749da326e4e);
+            
+    
+            var circle_marker_a064c66da45875c26f6da55e2f6dd337 = L.circleMarker(
+                [37.51615, 127.13093],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#AAAAAA", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_1efb6aef74b5ca8f6a2799beda674976 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_91395744d6619919918db78c47a4cc83 = $(`<div id="html_91395744d6619919918db78c47a4cc83" style="width: 100.0%; height: 100.0%;"><b>올림픽공원역(5호선)</b><br>❌ 30분 내 도달 불가<br><span style='font-size:11px;color:#555'>경도: 127.13093<br>위도: 37.51615</span></div>`)[0];
+                popup_1efb6aef74b5ca8f6a2799beda674976.setContent(html_91395744d6619919918db78c47a4cc83);
+            
+        
+
+        circle_marker_a064c66da45875c26f6da55e2f6dd337.bindPopup(popup_1efb6aef74b5ca8f6a2799beda674976)
+        ;
+
+        
+    
+    
+            circle_marker_a064c66da45875c26f6da55e2f6dd337.bindTooltip(
+                `<div>
+                     <b>올림픽공원역(5호선)</b><br>❌ 30분 내 도달 불가
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_3e0a5fcdb269a7df47f4104e84068d44 = L.marker(
+                [37.51615, 127.13093],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_d02464c3c4bcefd55abba0ace7cf1580 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#AAAAAA;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uc62c\ub9bc\ud53d\uacf5\uc6d0\uc5ed(5\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_3e0a5fcdb269a7df47f4104e84068d44.setIcon(div_icon_d02464c3c4bcefd55abba0ace7cf1580);
+            
+    
+            var circle_marker_095821c40d710401c2aaf48783f68f60 = L.circleMarker(
+                [37.52069, 127.10383],
+                {"bubblingMouseEvents": true, "color": "#000000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#AAAAAA", "fillOpacity": 0.95, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10, "stroke": true, "weight": 1.2}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+        var popup_2c0d9297d61e6b31a4af19dbe5b33720 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_3060c64ee87e08334b43149b127c0d03 = $(`<div id="html_3060c64ee87e08334b43149b127c0d03" style="width: 100.0%; height: 100.0%;"><b>잠실나루역(2호선)</b><br>❌ 30분 내 도달 불가<br><span style='font-size:11px;color:#555'>경도: 127.10383<br>위도: 37.52069</span></div>`)[0];
+                popup_2c0d9297d61e6b31a4af19dbe5b33720.setContent(html_3060c64ee87e08334b43149b127c0d03);
+            
+        
+
+        circle_marker_095821c40d710401c2aaf48783f68f60.bindPopup(popup_2c0d9297d61e6b31a4af19dbe5b33720)
+        ;
+
+        
+    
+    
+            circle_marker_095821c40d710401c2aaf48783f68f60.bindTooltip(
+                `<div>
+                     <b>잠실나루역(2호선)</b><br>❌ 30분 내 도달 불가
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_7fdd2dbb91d0f763446e07336cf51938 = L.marker(
+                [37.52069, 127.10383],
+                {
+}
+            ).addTo(feature_group_70f967e3407ab21f8078ed0b4a585524);
+        
+    
+            var div_icon_cfe7cfcc873574f15c05abab2022530b = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:10px;color:#AAAAAA;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-20px;margin-left:12px;\"\u003e\uc7a0\uc2e4\ub098\ub8e8\uc5ed(2\ud638\uc120)\u003c/div\u003e",
+  "iconSize": [120, 20],
+  "className": "empty",
+});
+        
+    
+                marker_7fdd2dbb91d0f763446e07336cf51938.setIcon(div_icon_cfe7cfcc873574f15c05abab2022530b);
+            
+    
+            feature_group_70f967e3407ab21f8078ed0b4a585524.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var feature_group_e67ee6bcbfe285dc7109d3e7802c316d = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_2bb0923ee646e024cbcb2f578ed07548 = L.circleMarker(
+                [37.5557, 127.1527],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFD700", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_2bb0923ee646e024cbcb2f578ed07548.bindTooltip(
+                `<div>
+                     <b>➕ 강동경희대병원</b><br>⚠️ 일반인만 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_c29bd5d780de822ca0782e4bcf9a4243 = L.marker(
+                [37.5557, 127.1527],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_ccf8544e50fe34d617ca31547704423f = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#FFD700;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\uac15\ub3d9\uacbd\ud76c\ub300\ubcd1\uc6d0\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_c29bd5d780de822ca0782e4bcf9a4243.setIcon(div_icon_ccf8544e50fe34d617ca31547704423f);
+            
+    
+            var circle_marker_3dffc217a70968f6f9b3fd18c408e95f = L.circleMarker(
+                [37.5624, 127.0469],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#AAAAAA", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_3dffc217a70968f6f9b3fd18c408e95f.bindTooltip(
+                `<div>
+                     <b>➕ 한양대학교병원</b><br>❌ 30분 내 도달 불가
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_1459577cc7e3f37519a0880bde06cdad = L.marker(
+                [37.5624, 127.0469],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_44f1f458fda539851af9c54e2ce8f482 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#AAAAAA;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\ud55c\uc591\ub300\ud559\uad50\ubcd1\uc6d0\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_1459577cc7e3f37519a0880bde06cdad.setIcon(div_icon_44f1f458fda539851af9c54e2ce8f482);
+            
+    
+            var circle_marker_b6bcd54ae936784fd9abbf9d5ee38b24 = L.circleMarker(
+                [37.531, 127.1494],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFD700", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_b6bcd54ae936784fd9abbf9d5ee38b24.bindTooltip(
+                `<div>
+                     <b>➕ 강동성심병원</b><br>⚠️ 일반인만 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_9f9f62354eb60415c535109c803409b3 = L.marker(
+                [37.531, 127.1494],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_0dd45002663dddd71a18dc4fb0b2071b = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#FFD700;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\uac15\ub3d9\uc131\uc2ec\ubcd1\uc6d0\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_9f9f62354eb60415c535109c803409b3.setIcon(div_icon_0dd45002663dddd71a18dc4fb0b2071b);
+            
+    
+            var circle_marker_2d0d74b37330ea21e07dc38309e711e7 = L.circleMarker(
+                [37.5521, 127.1237],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#AAAAAA", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_2d0d74b37330ea21e07dc38309e711e7.bindTooltip(
+                `<div>
+                     <b>🏛️ 강동구청</b><br>❌ 30분 내 도달 불가
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_5bd1b87f2c2193ee6ed4efec5593c244 = L.marker(
+                [37.5521, 127.1237],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_d35e44bfbae93c496badd929b8c2b8d0 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#AAAAAA;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\uac15\ub3d9\uad6c\uccad\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_5bd1b87f2c2193ee6ed4efec5593c244.setIcon(div_icon_d35e44bfbae93c496badd929b8c2b8d0);
+            
+    
+            var circle_marker_0537dbe682fa185776f1d7b1c5929731 = L.circleMarker(
+                [37.5525, 127.1377],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFD700", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_0537dbe682fa185776f1d7b1c5929731.bindTooltip(
+                `<div>
+                     <b>🏥 강동구 보건소</b><br>⚠️ 일반인만 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_b6ab04a6a85b3c97a3f5fb00a955d635 = L.marker(
+                [37.5525, 127.1377],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_a9490ceb663f5730a4287c10fb3d3347 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#FFD700;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\uac15\ub3d9\uad6c \ubcf4\uac74\uc18c\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_b6ab04a6a85b3c97a3f5fb00a955d635.setIcon(div_icon_a9490ceb663f5730a4287c10fb3d3347);
+            
+    
+            var circle_marker_07efc8e0fda4b915dd13f03302f283e7 = L.circleMarker(
+                [37.5374, 127.1265],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#FFD700", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_07efc8e0fda4b915dd13f03302f283e7.bindTooltip(
+                `<div>
+                     <b>🛒 롯데마트 천호점</b><br>⚠️ 일반인만 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_ecc9be0aa4fc479ca5c136fcf3c32a27 = L.marker(
+                [37.5374, 127.1265],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_c8bd960e2a3456c28c98b6cd794caff0 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#FFD700;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\ub86f\ub370\ub9c8\ud2b8 \ucc9c\ud638\uc810\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_ecc9be0aa4fc479ca5c136fcf3c32a27.setIcon(div_icon_c8bd960e2a3456c28c98b6cd794caff0);
+            
+    
+            var circle_marker_cfaa6694fe329ed36d486cc1a59abb33 = L.circleMarker(
+                [37.5253, 127.1262],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#AAAAAA", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_cfaa6694fe329ed36d486cc1a59abb33.bindTooltip(
+                `<div>
+                     <b>🛒 이마트 성내점</b><br>❌ 30분 내 도달 불가
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_0e768e886922b67f5d7dd5bc0fc457c1 = L.marker(
+                [37.5253, 127.1262],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_83f0e4870a3e17ee38cc0172e3264aba = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#AAAAAA;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\uc774\ub9c8\ud2b8 \uc131\ub0b4\uc810\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_0e768e886922b67f5d7dd5bc0fc457c1.setIcon(div_icon_83f0e4870a3e17ee38cc0172e3264aba);
+            
+    
+            var circle_marker_c53afc5d3ba7a6f2b6b1fc10424ec0e5 = L.circleMarker(
+                [37.5361, 127.1499],
+                {"bubblingMouseEvents": true, "color": "#000", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#00FF88", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 9, "stroke": true, "weight": 1}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            circle_marker_c53afc5d3ba7a6f2b6b1fc10424ec0e5.bindTooltip(
+                `<div>
+                     <b>🌿 길동생태공원</b><br>✅ 둘 다 30분 내 도달
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var marker_cd663e01fc64699f5aba0d8945f63099 = L.marker(
+                [37.5361, 127.1499],
+                {
+}
+            ).addTo(feature_group_e67ee6bcbfe285dc7109d3e7802c316d);
+        
+    
+            var div_icon_42dd8fbc4151464e98c4701815c6d208 = L.divIcon({
+  "html": "\u003cdiv style=\"font-size:9px;color:#00FF88;font-weight:bold;text-shadow:1px 1px 2px #000;white-space:nowrap;margin-top:-18px;margin-left:10px;\"\u003e\uae38\ub3d9\uc0dd\ud0dc\uacf5\uc6d0\u003c/div\u003e",
+  "iconSize": [120, 18],
+  "className": "empty",
+});
+        
+    
+                marker_cd663e01fc64699f5aba0d8945f63099.setIcon(div_icon_42dd8fbc4151464e98c4701815c6d208);
+            
+    
+            feature_group_e67ee6bcbfe285dc7109d3e7802c316d.addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var marker_136173f14be758f77f261e5005204236 = L.marker(
+                [37.5415, 127.1435],
+                {
+}
+            ).addTo(map_55cf9472a64b24897b84c186950c1c97);
+        
+    
+            var icon_f261626d72ddb6d053e67356c86c3509 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "white",
+  "iconColor": "white",
+  "icon": "star",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_b8ca7a07b3a2d873f6a4bb6e7ea1e8f5 = L.popup({
+  "maxWidth": 260,
+});
+
+        
+            
+                var html_03128696ffc88abecdf282d3df886e68 = $(`<div id="html_03128696ffc88abecdf282d3df886e68" style="width: 100.0%; height: 100.0%;"><b>길동사거리</b><br><small>강동구 길동 (서울 동별 65세+ 인구 1위 · 10,386명)</small></div>`)[0];
+                popup_b8ca7a07b3a2d873f6a4bb6e7ea1e8f5.setContent(html_03128696ffc88abecdf282d3df886e68);
+            
+        
+
+        marker_136173f14be758f77f261e5005204236.bindPopup(popup_b8ca7a07b3a2d873f6a4bb6e7ea1e8f5)
+        ;
+
+        
+    
+    
+            marker_136173f14be758f77f261e5005204236.bindTooltip(
+                `<div>
+                     <b>출발점: 길동사거리</b><br>강동구 길동 (서울 동별 65세+ 인구 1위 · 10,386명)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_136173f14be758f77f261e5005204236.setIcon(icon_f261626d72ddb6d053e67356c86c3509);
+            
+    
+            var layer_control_7a6661b9c35ebc2e9441b4bbd87f27ea_layers = {
+                base_layers : {
+                    "cartodbdarkmatter" : tile_layer_d9571ed803a4c4b1785c90867798a4a5,
+                },
+                overlays :  {
+                    "\ud83d\udd35 \uc77c\ubc18\uc778 \u2014 30\ubd84" : feature_group_05f301571577ebab68f62bebbc2462c9,
+                    "\ud83d\udd35 \uc77c\ubc18\uc778 \u2014 15\ubd84" : feature_group_35563a26c9bfc36582e7d259de73a2f5,
+                    "\ud83d\udd34 \ubcf4\ud589\ubcf4\uc870\uc7a5\uce58 \u2014 30\ubd84" : feature_group_f1036ba8cbca1c809c76b9cefd168b90,
+                    "\ud83d\udd34 \ubcf4\ud589\ubcf4\uc870\uc7a5\uce58 \u2014 15\ubd84" : feature_group_56121d83aac246574c3c168f2f4ed0b3,
+                    "\ud83d\udfe1 \uc783\uc5b4\ubc84\ub9b0 \uc601\uc5ed (\uc77c\ubc18\uc778\ub9cc \uc811\uadfc \uac00\ub2a5)" : feature_group_14502ab7d8077ca55b61c99db1cbe901,
+                    "\ud83d\ude87 \uc9c0\ud558\ucca0\uc5ed (\uc811\uadfc\uc131 \ubd84\ub958)" : feature_group_70f967e3407ab21f8078ed0b4a585524,
+                    "\ud83c\udfe2 \uc8fc\uc694 \uc2dc\uc124 (\uc811\uadfc\uc131 \ubd84\ub958)" : feature_group_e67ee6bcbfe285dc7109d3e7802c316d,
+                },
+            };
+            let layer_control_7a6661b9c35ebc2e9441b4bbd87f27ea = L.control.layers(
+                layer_control_7a6661b9c35ebc2e9441b4bbd87f27ea_layers.base_layers,
+                layer_control_7a6661b9c35ebc2e9441b4bbd87f27ea_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_55cf9472a64b24897b84c186950c1c97);
+
+        
+</script>
+</html>
