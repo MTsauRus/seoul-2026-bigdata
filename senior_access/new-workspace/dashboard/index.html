@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>분(分)의 격차 — 서울 보행권 분석 대시보드</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+/* ─── 리셋 & 기반 ─────────────────────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:      #0a1120;
+  --surface: #111c2e;
+  --card:    #0f1929;
+  --border:  #1e2d42;
+  --text:    #d8e4f0;
+  --muted:   #6b8099;
+  --accent:  #3b82f6;
+  --partA:   #10b981;
+  --partB:   #f59e0b;
+  --hdr-h:   64px;
+  --tab-h:   46px;
+}
+html, body { height:100%; background:var(--bg); color:var(--text);
+  font-family:'Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',sans-serif; }
+
+/* ─── 헤더 ───────────────────────────────────────────────────────── */
+#hdr {
+  position:sticky; top:0; z-index:200;
+  height:var(--hdr-h);
+  background:rgba(10,17,32,.97);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 24px;
+  backdrop-filter:blur(8px);
+}
+#hdr-left { display:flex; align-items:baseline; gap:12px; }
+#hdr h1 { font-size:1.05rem; font-weight:700; color:#fff; white-space:nowrap; }
+#hdr .sub { font-size:.72rem; color:var(--muted); }
+#hdr-right { display:flex; align-items:center; gap:8px; }
+.badge {
+  font-size:.65rem; font-weight:600; padding:2px 8px; border-radius:999px;
+  border:1px solid;
+}
+.badge-a { color:var(--partA); border-color:var(--partA); background:rgba(16,185,129,.08); }
+.badge-b { color:var(--partB); border-color:var(--partB); background:rgba(245,158,11,.08); }
+
+/* ─── 탭 필터 ────────────────────────────────────────────────────── */
+#tabs {
+  position:sticky; top:var(--hdr-h); z-index:190;
+  height:var(--tab-h);
+  background:rgba(11,18,33,.97);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:4px; padding:0 20px;
+  backdrop-filter:blur(6px);
+}
+.tab {
+  padding:6px 14px; font-size:.76rem; border-radius:6px; cursor:pointer;
+  border:1px solid transparent; color:var(--muted);
+  transition:all .18s;
+}
+.tab:hover { color:var(--text); background:var(--surface); }
+.tab.active { color:#fff; background:var(--accent); border-color:var(--accent); }
+.tab-a.active { background:var(--partA); border-color:var(--partA); }
+.tab-b.active { background:var(--partB); border-color:var(--partB); }
+#count { margin-left:auto; font-size:.7rem; color:var(--muted); }
+
+/* ─── 그리드 ─────────────────────────────────────────────────────── */
+#grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
+  gap:20px;
+  padding:20px;
+  align-items:start;
+}
+
+/* ─── 카드 ───────────────────────────────────────────────────────── */
+.card {
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  transition:transform .18s, box-shadow .18s;
+}
+.card:hover { transform:translateY(-2px); box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.card.hidden { display:none; }
+
+.card-top {
+  height:4px; width:100%; flex-shrink:0;
+}
+.cat-a .card-top { background:var(--partA); }
+.cat-b .card-top { background:var(--partB); }
+
+.card-hdr {
+  padding:14px 16px 10px;
+  display:flex; align-items:flex-start; gap:10px;
+  cursor:pointer;
+  user-select:none;
+}
+.card-hdr:hover { background:rgba(255,255,255,.03); }
+.card-num {
+  font-size:.65rem; font-weight:700; width:22px; height:22px;
+  border-radius:50%; display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; margin-top:1px;
+}
+.cat-a .card-num { background:rgba(16,185,129,.15); color:var(--partA); }
+.cat-b .card-num { background:rgba(245,158,11,.15); color:var(--partB); }
+
+.card-meta { flex:1; min-width:0; }
+.card-title {
+  font-size:.9rem; font-weight:700; color:#fff;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.card-sub {
+  font-size:.7rem; color:var(--muted); margin-top:2px;
+}
+.card-desc {
+  font-size:.72rem; color:#8fa3b8; margin-top:6px; line-height:1.6;
+}
+
+.expand-btn {
+  flex-shrink:0; width:26px; height:26px;
+  background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--muted); font-size:.85rem;
+  transition:all .15s;
+}
+.expand-btn:hover { background:var(--accent); color:#fff; border-color:var(--accent); }
+
+/* ─── 태그 ───────────────────────────────────────────────────────── */
+.card-tags {
+  display:flex; gap:5px; flex-wrap:wrap;
+  padding:0 16px 10px;
+}
+.tag {
+  font-size:.6rem; padding:2px 7px; border-radius:999px;
+  border:1px solid var(--border); color:var(--muted);
+}
+
+/* ─── iframe 컨테이너 ─────────────────────────────────────────────── */
+.iframe-wrap {
+  position:relative;
+  width:100%;
+  aspect-ratio: 4/3;
+  min-height:320px;
+  background:#0d1826;
+  border-top:1px solid var(--border);
+}
+.iframe-wrap iframe {
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  border:none;
+}
+.iframe-overlay {
+  position:absolute; inset:0;
+  background:transparent;
+  cursor:pointer;
+  z-index:2;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .2s;
+}
+.iframe-overlay span {
+  background:rgba(10,17,32,.85);
+  border:1px solid var(--accent);
+  color:#fff; font-size:.78rem; padding:8px 16px; border-radius:8px;
+  opacity:0; transition:opacity .2s;
+}
+.iframe-overlay:hover { background:rgba(0,0,0,.15); }
+.iframe-overlay:hover span { opacity:1; }
+.iframe-wrap.active .iframe-overlay { display:none; }
+
+/* ─── 전체화면 오버레이 ────────────────────────────────────────────── */
+#overlay {
+  display:none; position:fixed; inset:0; z-index:9999;
+  background:rgba(4,8,18,.96);
+  flex-direction:column;
+}
+#overlay.open { display:flex; }
+#overlay-bar {
+  height:48px; background:var(--surface); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 16px; gap:12px; flex-shrink:0;
+}
+#overlay-title { font-size:.9rem; font-weight:700; color:#fff; }
+#overlay-close {
+  margin-left:auto; width:32px; height:32px;
+  background:var(--card); border:1px solid var(--border); border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; color:var(--muted); font-size:1.1rem;
+  transition:all .15s;
+}
+#overlay-close:hover { background:#ef4444; color:#fff; border-color:#ef4444; }
+#overlay-frame {
+  flex:1; width:100%; border:none;
+}
+
+/* ─── 반응형 ─────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  #hdr h1 { font-size:.9rem; }
+  #hdr .sub { display:none; }
+  #grid { padding:12px; gap:12px; }
+  .iframe-wrap { aspect-ratio: 3/4; min-height:280px; }
+}
+@media (min-width: 1400px) {
+  #grid { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── 헤더 ─────────────────────────────────────────────────────── -->
+<header id="hdr">
+  <div id="hdr-left">
+    <h1>분(分)의 격차 — 서울 보행권 분석</h1>
+    <span class="sub">노인이 걸어서 닿는 서울 · 7개 인터랙티브 시각화</span>
+  </div>
+  <div id="hdr-right">
+    <span class="badge badge-a">Part A 보행권</span>
+    <span class="badge badge-b">Part B 기후</span>
+  </div>
+</header>
+
+<!-- ─── 탭 ──────────────────────────────────────────────────────── -->
+<nav id="tabs">
+  <button class="tab active" onclick="filter('all',this)">전체 <small id="cnt-all"></small></button>
+  <button class="tab tab-a" onclick="filter('a',this)">Part A — 보행 도달권</button>
+  <button class="tab tab-b" onclick="filter('b',this)">Part B — 기후 인프라</button>
+  <span id="count"></span>
+</nav>
+
+<!-- ─── 카드 그리드 ───────────────────────────────────────────────── -->
+<main id="grid">
+
+  <!-- ① 보행 도달권 격차 지도 -->
+  <article class="card cat-a" data-cat="a">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">1</div>
+      <div class="card-meta">
+        <div class="card-title">보행 도달권 격차 지도</div>
+        <div class="card-sub">65세 이상 vs 일반인 — 30분 등시선 직접 비교</div>
+        <div class="card-desc">
+          행정동 중심에서 출발해 30분간 걸었을 때 노인과 일반인의 도달 면적 차이를 시각화한다.
+          두 그룹의 등시선을 겹쳐 보여 어느 동에서 격차가 큰지 직관적으로 확인할 수 있다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">Folium</span>
+      <span class="tag">Dijkstra</span>
+      <span class="tag">등시선</span>
+      <span class="tag">260418</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-1">
+      <iframe src="../260418_submit/outputs/05_folium_map.html" loading="lazy"
+              title="보행 도달권 격차 지도" data-title="보행 도달권 격차 지도"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-1')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ② 보행권 손실률 지도 -->
+  <article class="card cat-a" data-cat="a">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">2</div>
+      <div class="card-meta">
+        <div class="card-title">보행권 손실률 지도</div>
+        <div class="card-sub">동별 손실률 코로플레스 · 상위 취약 동 하이라이트</div>
+        <div class="card-desc">
+          (일반인 30분 면적 − 노인 30분 면적) / 일반인 면적으로 정의한 손실률을 동별로 색상화했다.
+          손실이 큰 동일수록 노인의 이동 제약이 심하다는 뜻이며, 구릉지·강변 지역에서 두드러진다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">코로플레스</span>
+      <span class="tag">손실률</span>
+      <span class="tag">행정동</span>
+      <span class="tag">260418</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-2">
+      <iframe src="../260418_submit/outputs/06_seoul_loss_map.html" loading="lazy"
+              title="보행권 손실률 지도" data-title="보행권 손실률 지도"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-2')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ③ 보행권 우선순위 지도 -->
+  <article class="card cat-a" data-cat="a">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">3</div>
+      <div class="card-meta">
+        <div class="card-title">보행권 우선 개입 지도</div>
+        <div class="card-sub">손실률 × 노인 인구 → 복합 우선순위 스코어</div>
+        <div class="card-desc">
+          손실률이 크고 동시에 65세 이상 인구가 많은 동을 우선 개입 대상으로 스코어링한다.
+          "격차가 크지만 사람이 없는 곳"과 "격차는 작지만 노인이 밀집한 곳"을 구분해 정책 우선순위를 제시한다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">우선순위 스코어</span>
+      <span class="tag">노인 인구</span>
+      <span class="tag">손실률</span>
+      <span class="tag">260418</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-3">
+      <iframe src="../260418_submit/outputs/07c_priority_map.html" loading="lazy"
+              title="보행권 우선 개입 지도" data-title="보행권 우선 개입 지도"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-3')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ④ 다점 비교 등시선 -->
+  <article class="card cat-a" data-cat="a">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">4</div>
+      <div class="card-meta">
+        <div class="card-title">다점 비교 등시선</div>
+        <div class="card-sub">5개 지점 × 3속도 그룹 × 15/30/45분 슬라이더</div>
+        <div class="card-desc">
+          탑골공원·미아역·신림동·삼성역·잠실새내 5곳에서 동시 출발해 일반인·노인·보행보조장치 노인의
+          시간별 도달 면적을 비교한다. 랜드마크 도달 가능 여부를 초록·노랑·회색으로 분류해 표시한다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">등시선</span>
+      <span class="tag">5개 지점</span>
+      <span class="tag">concave hull</span>
+      <span class="tag">260420</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-4">
+      <iframe src="../260420_submit/outputs/05_a1_dual_isochrone_260420.html" loading="lazy"
+              title="다점 비교 등시선" data-title="다점 비교 등시선"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-4')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ⑤ 폭염쉼터 접근성 -->
+  <article class="card cat-b" data-cat="b">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">5</div>
+      <div class="card-meta">
+        <div class="card-title">폭염쉼터 노인 보행 접근성</div>
+        <div class="card-sub">4,107개 쉼터 · 15분/30분 도달 가능 동 코로플레스</div>
+        <div class="card-desc">
+          서울 전체 무더위쉼터를 출발지로 멀티소스 Dijkstra를 실행해 행정동별 최단 거리를 계산한다.
+          노인(0.88 m/s) 15분 도달 가능 여부로 색상화. 93%의 동이 노인도 15분 이내 접근 가능했다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">멀티소스 Dijkstra</span>
+      <span class="tag">폭염쉼터</span>
+      <span class="tag">코로플레스</span>
+      <span class="tag">260420</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-5">
+      <iframe src="../260420_submit/outputs/06_b1_heat_shelter_260420.html" loading="lazy"
+              title="폭염쉼터 노인 보행 접근성" data-title="폭염쉼터 노인 보행 접근성"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-5')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ⑥ 한파쉼터 접근성 -->
+  <article class="card cat-b" data-cat="b">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">6</div>
+      <div class="card-meta">
+        <div class="card-title">한파쉼터 노인 보행 접근성</div>
+        <div class="card-sub">1,642개 쉼터 · 겨울철 접근 사각지대 탐지</div>
+        <div class="card-desc">
+          한파쉼터는 폭염쉼터의 40% 수준(1,642개)으로 접근 사각지대가 더 넓다.
+          노인 접근 어려운 동 비율이 폭염(7%) → 한파(11%)로 확대된다.
+          더 위험한 겨울에 오히려 인프라가 더 부족하다는 역설을 보여준다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">멀티소스 Dijkstra</span>
+      <span class="tag">한파쉼터</span>
+      <span class="tag">코로플레스</span>
+      <span class="tag">260420</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-6">
+      <iframe src="../260420_submit/outputs/07_b2_cold_shelter_260420.html" loading="lazy"
+              title="한파쉼터 노인 보행 접근성" data-title="한파쉼터 노인 보행 접근성"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-6')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <!-- ⑦ 결빙 취약지점 -->
+  <article class="card cat-b" data-cat="b">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">7</div>
+      <div class="card-meta">
+        <div class="card-title">겨울 결빙 취약지점</div>
+        <div class="card-sub">제설함 커버리지 + 도로열선 구간 · 한강·산지 제외</div>
+        <div class="card-desc">
+          서울 행정동 union에서 OSM 수역·산림을 제거한 도심 기반(431.9 km²)에 제설함 100m/200m 커버리지를 차감해
+          결빙 취약 구역을 붉게 표시한다. 열선 설치 도로 구간을 OSM 매칭으로 라인 시각화한다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">EPSG:5186</span>
+      <span class="tag">OSM natural features</span>
+      <span class="tag">제설함</span>
+      <span class="tag">열선</span>
+      <span class="tag">260421</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-7">
+      <iframe src="../260421_submit/outputs/10_b3_snow_icing_v3_260421.html" loading="lazy"
+              title="겨울 결빙 취약지점" data-title="겨울 결빙 취약지점"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-7')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+</main>
+
+<!-- ─── 전체화면 오버레이 ──────────────────────────────────────────── -->
+<div id="overlay">
+  <div id="overlay-bar">
+    <span id="overlay-title">—</span>
+    <div id="overlay-close" onclick="closeOverlay()" title="닫기 (Esc)">✕</div>
+  </div>
+  <iframe id="overlay-frame" src="" title="전체화면"></iframe>
+</div>
+
+<script>
+// ─── 탭 필터 ──────────────────────────────────────────────────────
+const cards = document.querySelectorAll('.card');
+function filter(cat, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  let shown = 0;
+  cards.forEach(c => {
+    const match = cat === 'all' || c.dataset.cat === cat;
+    c.classList.toggle('hidden', !match);
+    if (match) shown++;
+  });
+  document.getElementById('count').textContent = `${shown}개 표시 중`;
+}
+// 초기 카운트
+document.getElementById('count').textContent = `${cards.length}개 표시 중`;
+
+// ─── iframe 활성화 (클릭 후 인터랙션 가능) ──────────────────────────
+function activateFrame(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  wrap.classList.add('active');
+}
+
+// ─── 전체화면 ────────────────────────────────────────────────────
+function expand(hdrEl) {
+  // 클릭이 expand-btn 이 아닌 다른 영역일 때만 iframe 전체화면
+  const iframe = hdrEl.closest('.card').querySelector('iframe');
+  const title  = iframe.getAttribute('data-title');
+  document.getElementById('overlay-title').textContent = title;
+  document.getElementById('overlay-frame').src = iframe.src;
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeOverlay() {
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('overlay-frame').src = '';
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeOverlay();
+});
+
+// expand-btn 클릭은 expand 함수와 동일 동작 (card-hdr onclick 위임)
+document.querySelectorAll('.expand-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    expand(btn.closest('.card-hdr'));
+  });
+});
+</script>
+
+</body>
+</html>

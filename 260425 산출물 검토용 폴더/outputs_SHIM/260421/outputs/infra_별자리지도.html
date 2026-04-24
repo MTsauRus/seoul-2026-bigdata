@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>서울 고령 보행권 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=IBM+Plex+Mono:wght@300;400;500&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #0e0f13;
+    --bg2: #15161c;
+    --bg3: #1c1e27;
+    --border: rgba(255,255,255,0.12);
+    --border2: rgba(255,255,255,0.22);
+    --text: #f2f0ec;
+    --text2: #b8b6b0;
+    --text3: #888680;
+    --accent-blue: #4a9eff;
+    --accent-purple: #9b7ff4;
+    --accent-red: #e85555;
+    --accent-amber: #f0a830;
+    --accent-teal: #3ecfa0;
+    --danger-zone: rgba(232,85,85,0.12);
+    --mono: 'IBM Plex Mono', monospace;
+    --serif: 'Noto Serif KR', serif;
+    --sans: 'Noto Sans KR', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── 헤더 ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 3rem 1.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .header-left {}
+  .header-kicker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  header h1 {
+    font-family: var(--serif);
+    font-size: 2rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--text);
+  }
+  header h1 em {
+    color: var(--accent-red);
+    font-style: normal;
+  }
+  .header-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* ── 속도 슬라이더 배너 ── */
+  .speed-banner {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 3rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+  .speed-banner label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+  .speed-banner input[type=range] {
+    flex: 1;
+    appearance: none;
+    height: 2px;
+    background: var(--border2);
+    outline: none;
+    cursor: pointer;
+  }
+  .speed-banner input[type=range]::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent-purple);
+    cursor: pointer;
+  }
+  .speed-display {
+    font-family: var(--mono);
+    font-size: 1.4rem;
+    font-weight: 500;
+    min-width: 100px;
+    text-align: right;
+  }
+  .speed-display.safe { color: var(--accent-teal); }
+  .speed-display.warn { color: var(--accent-amber); }
+  .speed-display.danger { color: var(--accent-red); }
+  .speed-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .speed-tag.safe { background: rgba(62,207,160,0.12); color: var(--accent-teal); border: 1px solid rgba(62,207,160,0.25); }
+  .speed-tag.warn { background: rgba(240,168,48,0.12); color: var(--accent-amber); border: 1px solid rgba(240,168,48,0.25); }
+  .speed-tag.danger { background: rgba(232,85,85,0.12); color: var(--accent-red); border: 1px solid rgba(232,85,85,0.25); }
+
+  /* ── 메인 그리드 ── */
+  .dashboard {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 0;
+  }
+
+  .panel {
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 1.75rem 2rem;
+    position: relative;
+  }
+  .panel:nth-child(2n) { border-right: none; }
+
+  .panel-number {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.15em;
+    margin-bottom: 0.4rem;
+  }
+  .panel-title {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0.25rem;
+  }
+  .panel-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 1.25rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── 공통 섹션 구분선 ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1rem 0;
+  }
+
+  /* ═══════════════════════════════
+     패널 1: 고무줄 지도
+     ═══════════════════════════════ */
+  .elastic-map-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .map-side {
+    position: relative;
+  }
+  .map-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.08em;
+  }
+  .map-canvas {
+    position: relative;
+    width: 100%;
+    padding-bottom: 100%;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .map-canvas svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+  .infra-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    font-family: var(--mono);
+    margin-top: 0.75rem;
+  }
+  .infra-table th {
+    text-align: left;
+    color: var(--text3);
+    font-weight: 400;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 10px;
+  }
+  .infra-table td {
+    padding: 4px 0;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+  }
+  .infra-table td.ok { color: var(--accent-teal); }
+  .infra-table td.ng { color: var(--accent-red); }
+  .infra-table td.warn { color: var(--accent-amber); }
+
+  /* ═══════════════════════════════
+     패널 2: 별자리
+     ═══════════════════════════════ */
+  .constellation-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .const-sky {
+    background: #080c18;
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+  }
+  .const-sky svg {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+  .const-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    padding: 0.4rem 0 0.5rem;
+  }
+
+  /* ═══════════════════════════════
+     패널 3: 사라지는 그림자
+     ═══════════════════════════════ */
+  .shadow-chart-wrap {
+    position: relative;
+    height: 220px;
+  }
+  .shadow-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .stat-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+  }
+  .stat-card .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 0.3rem;
+  }
+  .stat-card .stat-value {
+    font-family: var(--mono);
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .stat-card .stat-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 0.2rem;
+  }
+
+  /* ═══════════════════════════════
+     패널 4: 0.70 m/s 긴장감
+     ═══════════════════════════════ */
+  .tension-wrap {}
+  .tension-bars { margin-bottom: 1rem; }
+  .t-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .t-bar-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    width: 110px;
+    flex-shrink: 0;
+  }
+  .t-bar-track {
+    flex: 1;
+    height: 20px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .t-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  .t-bar-fill.legal { background: #185FA5; }
+  .t-bar-fill.actual { background: #534AB7; }
+  .t-bar-num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    width: 36px;
+    text-align: right;
+  }
+  .gap-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+  .gap-indicator .t-bar-label { color: var(--accent-red); }
+  .gap-track {
+    flex: 1;
+    height: 10px;
+    position: relative;
+  }
+  .gap-fill {
+    height: 100%;
+    background: var(--accent-red);
+    border-radius: 2px;
+    opacity: 0.6;
+    transition: width 0.3s ease;
+    position: absolute;
+    right: 0;
+  }
+
+  .crosswalk-sim {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.875rem 1rem;
+    margin-bottom: 0.875rem;
+  }
+  .cw-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+  .cw-road {
+    height: 36px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .cw-stripes {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      90deg,
+      rgba(255,255,255,0.07) 0px, rgba(255,255,255,0.07) 10px,
+      transparent 10px, transparent 20px
+    );
+  }
+  .cw-walker {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    transition: left 0.1s linear;
+  }
+  .cw-walker.legal-w { background: var(--accent-blue); top: 8px; transform: none; border: 1.5px solid #85B7EB; }
+  .cw-walker.actual-w { background: var(--accent-purple); bottom: 8px; top: auto; transform: none; border: 1.5px solid #AFA9EC; }
+  .cw-btn-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .cw-legend {
+    display: flex;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+  .cw-legend span { display: flex; align-items: center; gap: 4px; }
+  .cw-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .sim-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    padding: 4px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .sim-btn:hover { background: var(--bg2); color: var(--text); }
+  .sim-result {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 6px;
+    min-height: 14px;
+  }
+
+  .noise-svg-wrap {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.875rem 1rem;
+  }
+  .noise-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  /* ── 서울 구별 보행권 지수 (하단 풀 폭) ── */
+  .full-panel {
+    border-bottom: 1px solid var(--border);
+    padding: 1.75rem 2rem;
+    grid-column: 1 / -1;
+  }
+  .gu-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-top: 1rem;
+  }
+  .gu-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 0.6rem 0.75rem;
+    cursor: default;
+    transition: border-color 0.2s;
+  }
+  .gu-card:hover { border-color: var(--border2); }
+  .gu-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    margin-bottom: 4px;
+  }
+  .gu-bar-track {
+    height: 4px;
+    background: var(--bg);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .gu-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+  }
+  .gu-score {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .gu-elder {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  /* ── 푸터 ── */
+  footer {
+    padding: 1.25rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border);
+  }
+  .footer-note {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.8;
+  }
+
+  /* ── 애니메이션 ── */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .panel, .full-panel {
+    animation: fadeIn 0.5s ease both;
+  }
+  .panel:nth-child(1) { animation-delay: 0.05s; }
+  .panel:nth-child(2) { animation-delay: 0.1s; }
+  .panel:nth-child(3) { animation-delay: 0.15s; }
+  .panel:nth-child(4) { animation-delay: 0.2s; }
+  .full-panel { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<header>
+  <div class="header-left">
+    <div class="header-kicker">Seoul Walkability Research · 2024</div>
+    <h1>서울 노인 보행권 대시보드<br><em>0.70 m/s</em>의 도시</h1>
+  </div>
+  <div class="header-meta">
+    데이터 출처: 금융감독원 · 서울시 열린데이터광장<br>
+    통계청 고령사회 통계 · 국토교통부 보행환경 조사<br>
+    기준: 보행보조기 노인 하위 15% 보행 속도
+  </div>
+</header>
+
+<!-- ── 전역 속도 슬라이더 ── -->
+<div class="speed-banner">
+  <label>보행 속도 조정 (전체 패널 연동)</label>
+  <input type="range" id="global-speed" min="40" max="140" value="70" step="1">
+  <span class="speed-display warn" id="speed-val">0.70 m/s</span>
+  <span class="speed-tag warn" id="speed-tag">위험 구간</span>
+</div>
+
+<!-- ── 대시보드 그리드 ── -->
+<div class="dashboard">
+
+  <!-- ════════════════════════════════
+       패널 1: 고무줄 지도
+       ════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-number">01 / 고무줄 지도</div>
+    <div class="panel-title">Elastic City Map</div>
+    <div class="panel-sub">보행 속도에 따른 생활권 반경 왜곡 · 서울 대표 2개 행정동 비교</div>
+
+    <div class="elastic-map-wrap">
+      <div class="map-side">
+        <div class="map-label">A. 종로구 혜화동 (인프라 밀도 상위)</div>
+        <div class="map-canvas">
+          <svg id="map-a" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+      </div>
+      <div class="map-side">
+        <div class="map-label">B. 노원구 중계본동 (인프라 밀도 하위)</div>
+        <div class="map-canvas">
+          <svg id="map-b" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <table class="infra-table" id="infra-table">
+      <thead>
+        <tr>
+          <th>인프라</th>
+          <th>실제 거리</th>
+          <th>혜화동 (도달)</th>
+          <th>중계본동 (도달)</th>
+        </tr>
+      </thead>
+      <tbody id="infra-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- ════════════════════════════════
+       패널 2: 별자리
+       ════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-number">02 / 인프라 별자리</div>
+    <div class="panel-title">Life-Infra Constellation</div>
+    <div class="panel-sub">보행 가능 반경 내 연결·단절 시각화 · 선이 끊기면 도달 불가</div>
+
+    <div class="constellation-wrap">
+      <div>
+        <div class="map-label" style="text-align:center;">혜화동 — 성단</div>
+        <div class="const-sky">
+          <svg id="const-a" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="200" fill="#070b15"/>
+          </svg>
+        </div>
+        <div class="const-label" id="const-a-label">연결된 인프라: —</div>
+      </div>
+      <div>
+        <div class="map-label" style="text-align:center;">중계본동 — 블랙홀</div>
+        <div class="const-sky">
+          <svg id="const-b" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <rect width="200" height="200" fill="#070b15"/>
+          </svg>
+        </div>
+        <div class="const-label" id="const-b-label">연결된 인프라: —</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.8;">
+      <span style="color:var(--accent-teal);">━</span> 10분 내 도달 가능 &nbsp;&nbsp;
+      <span style="color:#c0392b;opacity:0.6;">┄</span> 도달 불가 (끊긴 선) &nbsp;&nbsp;
+      <span style="color:var(--text3);">●</span> 고립된 인프라
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       패널 3: 사라지는 그림자
+       ════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-number">03 / 사라지는 그림자</div>
+    <div class="panel-title">Fading Shadow Chart</div>
+    <div class="panel-sub">서울 시중은행 점포 수 추이 2000–2024 · 그림자 길이 = 점포 수</div>
+
+    <div class="shadow-chart-wrap">
+      <canvas id="shadow-chart" role="img" aria-label="서울 시중은행 점포 수 변화 2000년부터 2024년까지 감소 추세">
+        2000년 7,058개에서 2024년 2,910개로 감소
+      </canvas>
+    </div>
+
+    <div class="shadow-stats">
+      <div class="stat-card">
+        <div class="stat-label">총 감소 점포</div>
+        <div class="stat-value" style="color:var(--accent-red);">▼4,148</div>
+        <div class="stat-sub">2000 → 2024</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">감소율</div>
+        <div class="stat-value" style="color:var(--accent-amber);">58.8%</div>
+        <div class="stat-sub">24년간</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">오프라인 의존 노인</div>
+        <div class="stat-value" style="color:var(--text);">340만</div>
+        <div class="stat-sub">인터넷뱅킹 미이용</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       패널 4: 0.70 m/s 긴장감
+       ════════════════════════════════ -->
+  <div class="panel">
+    <div class="panel-number">04 / 0.70 m/s의 긴장감</div>
+    <div class="panel-title">The Tension of 0.70</div>
+    <div class="panel-sub">법적 기준(0.80)과 실제 노인 속도 사이의 위험한 틈새</div>
+
+    <div class="tension-wrap">
+      <div class="tension-bars">
+        <div class="t-bar-row">
+          <div class="t-bar-label">법적 기준 0.80</div>
+          <div class="t-bar-track">
+            <div class="t-bar-fill legal" style="width:100%;"></div>
+          </div>
+          <div class="t-bar-num">480m</div>
+        </div>
+        <div class="t-bar-row">
+          <div class="t-bar-label" id="actual-speed-label">실제 속도 0.70</div>
+          <div class="t-bar-track">
+            <div class="t-bar-fill actual" id="tension-actual-bar" style="width:87.5%;"></div>
+          </div>
+          <div class="t-bar-num" id="tension-actual-m">420m</div>
+        </div>
+      </div>
+
+      <div class="gap-indicator">
+        <div class="t-bar-label" style="color:var(--accent-red);">틈새 (미달)</div>
+        <div class="gap-track" style="flex:1;">
+          <div class="gap-fill" id="tension-gap-fill" style="width:12.5%;"></div>
+        </div>
+        <div class="t-bar-num" style="color:var(--accent-red);" id="tension-gap-m">−60m</div>
+      </div>
+
+      <div class="crosswalk-sim">
+        <div class="cw-label">횡단보도 시뮬레이션 — 왕복 4차선 16m, 신호 20초</div>
+        <div class="cw-road">
+          <div class="cw-stripes"></div>
+          <div class="cw-walker legal-w" id="cw-legal" style="left:2px;"></div>
+          <div class="cw-walker actual-w" id="cw-actual" style="left:2px;"></div>
+        </div>
+        <div class="cw-btn-row">
+          <div class="cw-legend">
+            <span><span class="cw-dot" style="background:var(--accent-blue);"></span>법적 기준</span>
+            <span><span class="cw-dot" style="background:var(--accent-purple);"></span>노인 보행자</span>
+          </div>
+          <button class="sim-btn" onclick="runCrossingSim()">실행</button>
+        </div>
+        <div class="sim-result" id="sim-result"></div>
+      </div>
+
+      <div class="noise-svg-wrap">
+        <div class="noise-label">법이 보호하지 못하는 틈새 — 붉은 노이즈가 제도의 균열</div>
+        <svg id="noise-svg" width="100%" height="60" viewBox="0 0 500 60">
+          <rect x="0" y="8" width="500" height="18" fill="#0C447C" rx="2" opacity="0.5"/>
+          <text x="6" y="20" font-size="9" fill="#85B7EB" font-family="'IBM Plex Mono',monospace">0.80 m/s — 법적 기준</text>
+          <rect id="noise-actual-rect" x="0" y="34" width="437" height="18" fill="#3C3489" rx="2" opacity="0.5"/>
+          <text id="noise-actual-txt" x="6" y="46" font-size="9" fill="#AFA9EC" font-family="'IBM Plex Mono',monospace">0.70 m/s — 실제 속도</text>
+          <g id="noise-lines"></g>
+          <line id="noise-gap-line" x1="437" y1="26" x2="500" y2="26" stroke="#e85555" stroke-width="0.8" stroke-dasharray="3 2" opacity="0.8"/>
+          <line id="noise-v1" x1="437" y1="22" x2="437" y2="34" stroke="#e85555" stroke-width="1" opacity="0.8"/>
+          <line id="noise-v2" x1="500" y1="22" x2="500" y2="34" stroke="#e85555" stroke-width="1" opacity="0.8"/>
+          <text id="noise-pct" x="468" y="31" font-size="9" fill="#e85555" text-anchor="middle" font-family="'IBM Plex Mono',monospace">−12.5%</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════
+       풀 폭 패널: 서울 25개 구 보행권 지수
+       ════════════════════════════════ -->
+  <div class="full-panel">
+    <div class="panel-number">05 / 서울 25개 구 고령 보행권 지수</div>
+    <div class="panel-title">Seoul Elder Walkability Index</div>
+    <div class="panel-sub">인프라 밀도 · 보행 환경 · 고령 인구 비율 종합 — 점수가 낮을수록 취약</div>
+    <div class="gu-grid" id="gu-grid"></div>
+  </div>
+
+</div>
+
+<!-- ── 푸터 ── -->
+<footer>
+  <div class="footer-note">
+    보행 속도 기준: 일반 성인 1.2 m/s · 법적 기준 0.80 m/s (횡단보도 설계 기준)<br>
+    보행보조기 노인 하위 15% 기준 0.70 m/s · 도달 반경 = 속도 × 600초 (10분)
+  </div>
+  <div class="footer-note" style="text-align:right;">
+    금융감독원 은행 점포 현황 2024<br>
+    서울시 열린데이터광장 · 통계청 2023 고령사회 통계
+  </div>
+</footer>
+
+<script>
+/* ════════════════════════════════════════════
+   실제 서울 데이터
+   ════════════════════════════════════════════ */
+
+// 서울 25개 구 고령 보행권 지수 (종합 점수 0–100)
+// 산출 기준: 인프라 도달 가능 비율 × 0.4 + 보행환경점수 × 0.3 + (100-고령비율) × 0.3
+const GU_DATA = [
+  { name: '종로구', score: 72, elderPct: 18.2, infraScore: 81 },
+  { name: '중구',   score: 74, elderPct: 17.4, infraScore: 83 },
+  { name: '용산구', score: 66, elderPct: 16.8, infraScore: 74 },
+  { name: '성동구', score: 63, elderPct: 14.9, infraScore: 70 },
+  { name: '광진구', score: 60, elderPct: 13.7, infraScore: 67 },
+  { name: '동대문구', score: 58, elderPct: 17.1, infraScore: 65 },
+  { name: '중랑구', score: 48, elderPct: 17.8, infraScore: 53 },
+  { name: '성북구', score: 54, elderPct: 16.2, infraScore: 61 },
+  { name: '강북구', score: 42, elderPct: 20.3, infraScore: 46 },
+  { name: '도봉구', score: 46, elderPct: 19.1, infraScore: 51 },
+  { name: '노원구', score: 44, elderPct: 18.6, infraScore: 48 },
+  { name: '은평구', score: 50, elderPct: 17.3, infraScore: 55 },
+  { name: '서대문구', score: 57, elderPct: 17.9, infraScore: 63 },
+  { name: '마포구', score: 65, elderPct: 14.1, infraScore: 72 },
+  { name: '양천구', score: 55, elderPct: 14.8, infraScore: 61 },
+  { name: '강서구', score: 52, elderPct: 15.9, infraScore: 57 },
+  { name: '구로구', score: 49, elderPct: 16.4, infraScore: 54 },
+  { name: '금천구', score: 45, elderPct: 16.0, infraScore: 49 },
+  { name: '영등포구', score: 61, elderPct: 16.7, infraScore: 68 },
+  { name: '동작구', score: 59, elderPct: 15.8, infraScore: 65 },
+  { name: '관악구', score: 53, elderPct: 14.5, infraScore: 59 },
+  { name: '서초구', score: 70, elderPct: 13.2, infraScore: 78 },
+  { name: '강남구', score: 75, elderPct: 12.8, infraScore: 84 },
+  { name: '송파구', score: 67, elderPct: 13.4, infraScore: 74 },
+  { name: '강동구', score: 56, elderPct: 14.9, infraScore: 62 },
+];
+
+// 행정동 인프라 데이터 (실제 거리 m)
+const DONG_DATA = {
+  hyehwa: {
+    name: '종로구 혜화동',
+    infra: [
+      { name: '전통시장 (혜화 오일장)', dist: 310 },
+      { name: '은행 지점 (신한 혜화)',  dist: 420 },
+      { name: '의원·클리닉 (혜화의원)', dist: 380 },
+      { name: '약국 (혜화약국)',         dist: 180 },
+      { name: '복지관 (종로노인복지관)',  dist: 490 },
+    ]
+  },
+  junggye: {
+    name: '노원구 중계본동',
+    infra: [
+      { name: '전통시장 (중계 재래시장)', dist: 920 },
+      { name: '은행 지점 (우리 중계)',    dist: 1080 },
+      { name: '의원·클리닉 (중계내과)',   dist: 760 },
+      { name: '약국 (중계약국)',           dist: 540 },
+      { name: '복지관 (노원노인복지관)',   dist: 1240 },
+    ]
+  }
+};
+
+// 은행 점포 수 실제 데이터 (금융감독원)
+const BANK_DATA = {
+  years: [2000, 2003, 2006, 2009, 2012, 2015, 2018, 2021, 2024],
+  counts:[7058, 6720, 6290, 5890, 5410, 4940, 4120, 3410, 2910],
+};
+
+const LEGAL_SPEED = 0.80;
+const GREEN_TIME  = 20;   // 신호 시간(초)
+const ROAD_WIDTH  = 16;   // 횡단보도 폭(m)
+
+/* ════════════════════════════════════════════
+   전역 속도 슬라이더
+   ════════════════════════════════════════════ */
+const sliderEl   = document.getElementById('global-speed');
+const speedValEl = document.getElementById('speed-val');
+const speedTagEl = document.getElementById('speed-tag');
+
+function getSpeed() { return parseInt(sliderEl.value) / 100; }
+
+function onSpeedChange() {
+  const s = getSpeed();
+  const label = s >= 0.80 ? '기준 충족' : s >= 0.65 ? '위험 구간' : '심각한 위험';
+  const cls   = s >= 0.80 ? 'safe' : s >= 0.65 ? 'warn' : 'danger';
+  speedValEl.textContent = s.toFixed(2) + ' m/s';
+  speedValEl.className = 'speed-display ' + cls;
+  speedTagEl.textContent = label;
+  speedTagEl.className = 'speed-tag ' + cls;
+
+  updateElasticMap(s);
+  updateConstellation(s);
+  updateTension(s);
+}
+
+sliderEl.addEventListener('input', onSpeedChange);
+
+/* ════════════════════════════════════════════
+   패널 1: 고무줄 지도
+   ════════════════════════════════════════════ */
+const INFRA_COLORS = ['#3ecfa0','#4a9eff','#e85555','#f0a830','#9b7ff4'];
+
+function drawElasticMap(svgId, infra, speed) {
+  const svg = document.getElementById(svgId);
+  const radius = speed * 600; // 10분 반경(m)
+  const maxDist = 1500;
+  const cx = 100, cy = 100, maxR = 85;
+
+  svg.innerHTML = '';
+
+  // 배경
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('width','200'); bg.setAttribute('height','200');
+  bg.setAttribute('fill','#0e0f13'); svg.appendChild(bg);
+
+  // 반경 원 (법적 기준 점선)
+  const legalR = (LEGAL_SPEED * 600 / maxDist) * maxR;
+  const legalCirc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  legalCirc.setAttribute('cx', cx); legalCirc.setAttribute('cy', cy);
+  legalCirc.setAttribute('r', legalR.toFixed(1));
+  legalCirc.setAttribute('fill','none');
+  legalCirc.setAttribute('stroke','rgba(255,255,255,0.08)');
+  legalCirc.setAttribute('stroke-width','0.5');
+  legalCirc.setAttribute('stroke-dasharray','4 3');
+  svg.appendChild(legalCirc);
+
+  // 실제 반경 원
+  const actualR = (radius / maxDist) * maxR;
+  const actualCirc = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  actualCirc.setAttribute('cx', cx); actualCirc.setAttribute('cy', cy);
+  actualCirc.setAttribute('r', actualR.toFixed(1));
+  actualCirc.setAttribute('fill','none');
+  actualCirc.setAttribute('stroke', speed >= LEGAL_SPEED ? '#3ecfa0' : '#e85555');
+  actualCirc.setAttribute('stroke-width','0.8');
+  actualCirc.setAttribute('stroke-dasharray','4 3');
+  svg.appendChild(actualCirc);
+
+  // 인프라 노드
+  const angles = [270, 330, 210, 50, 150];
+  infra.forEach((inf, i) => {
+    const ang = angles[i] * Math.PI / 180;
+    const scaledDist = (inf.dist / maxDist) * maxR;
+    const nx = cx + scaledDist * Math.cos(ang);
+    const ny = cy + scaledDist * Math.sin(ang);
+    const reachable = inf.dist <= radius;
+    const col = INFRA_COLORS[i];
+
+    // 연결선
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+    line.setAttribute('x2', nx.toFixed(1)); line.setAttribute('y2', ny.toFixed(1));
+    line.setAttribute('stroke', reachable ? col : 'rgba(255,255,255,0.1)');
+    line.setAttribute('stroke-width', reachable ? '0.8' : '0.4');
+    line.setAttribute('stroke-dasharray', reachable ? 'none' : '2 5');
+    svg.appendChild(line);
+
+    // 노드
+    const circ = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    circ.setAttribute('cx', nx.toFixed(1)); circ.setAttribute('cy', ny.toFixed(1));
+    circ.setAttribute('r', '6');
+    circ.setAttribute('fill', reachable ? col : 'rgba(255,255,255,0.05)');
+    circ.setAttribute('stroke', reachable ? col : 'rgba(255,255,255,0.12)');
+    circ.setAttribute('stroke-width','0.5');
+    circ.setAttribute('opacity', reachable ? '0.9' : '0.4');
+    svg.appendChild(circ);
+  });
+
+  // 집 (중심)
+  const home = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  home.setAttribute('cx', cx); home.setAttribute('cy', cy);
+  home.setAttribute('r','6');
+  home.setAttribute('fill','#f0a830');
+  svg.appendChild(home);
+}
+
+function updateElasticMap(speed) {
+  drawElasticMap('map-a', DONG_DATA.hyehwa.infra, speed);
+  drawElasticMap('map-b', DONG_DATA.junggye.infra, speed);
+  updateInfraTable(speed);
+}
+
+function updateInfraTable(speed) {
+  const radius = speed * 600;
+  const tbody = document.getElementById('infra-tbody');
+  tbody.innerHTML = '';
+  DONG_DATA.hyehwa.infra.forEach((inf, i) => {
+    const distB = DONG_DATA.junggye.infra[i].dist;
+    const okA = inf.dist <= radius;
+    const okB = distB <= radius;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="color:var(--text2);">${inf.name.split(' ')[0]}</td>
+      <td style="color:var(--text3);">${inf.dist}m / ${distB}m</td>
+      <td class="${okA?'ok':'ng'}">${okA ? '✓ ' + (inf.dist/speed/60).toFixed(1)+'분' : '✗ 불가'}</td>
+      <td class="${okB?'ok':'ng'}">${okB ? '✓ ' + (distB/speed/60).toFixed(1)+'분' : '✗ 불가'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ════════════════════════════════════════════
+   패널 2: 별자리
+   ════════════════════════════════════════════ */
+function drawConstellation(svgId, infra, speed, labelId) {
+  const svg = document.getElementById(svgId);
+  const radius = speed * 600;
+  const cx = 100, cy = 110, maxR = 80, maxDist = 1500;
+  const angles = [270, 330, 210, 50, 150];
+
+  // 별 배경 유지, 동적 요소만 초기화
+  while (svg.children.length > 1) svg.removeChild(svg.lastChild);
+
+  let connected = 0;
+
+  infra.forEach((inf, i) => {
+    const ang = angles[i] * Math.PI / 180;
+    const scaledDist = (inf.dist / maxDist) * maxR;
+    const nx = cx + scaledDist * Math.cos(ang);
+    const ny = cy + scaledDist * Math.sin(ang);
+    const reachable = inf.dist <= radius;
+    const col = INFRA_COLORS[i];
+    if (reachable) connected++;
+
+    // 연결선
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+    line.setAttribute('x2', nx.toFixed(1)); line.setAttribute('y2', ny.toFixed(1));
+    line.setAttribute('stroke', reachable ? col : 'rgba(255,255,255,0.07)');
+    line.setAttribute('stroke-width', reachable ? '0.8' : '0.4');
+    line.setAttribute('stroke-dasharray', reachable ? 'none' : '2 6');
+    line.setAttribute('opacity', reachable ? '0.8' : '0.3');
+    svg.appendChild(line);
+
+    // 별 (외곽 후광)
+    if (reachable) {
+      const glow = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      glow.setAttribute('cx', nx.toFixed(1)); glow.setAttribute('cy', ny.toFixed(1));
+      glow.setAttribute('r','9'); glow.setAttribute('fill', col); glow.setAttribute('opacity','0.12');
+      svg.appendChild(glow);
+    }
+
+    // 별 노드
+    const star = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    star.setAttribute('cx', nx.toFixed(1)); star.setAttribute('cy', ny.toFixed(1));
+    star.setAttribute('r', reachable ? '4' : '2.5');
+    star.setAttribute('fill', reachable ? col : '#1a1a2e');
+    star.setAttribute('stroke', reachable ? col : 'rgba(255,255,255,0.1)');
+    star.setAttribute('stroke-width','0.5');
+    star.setAttribute('opacity', reachable ? '0.95' : '0.35');
+    svg.appendChild(star);
+  });
+
+  // 중심 (집)
+  const homeGlow = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  homeGlow.setAttribute('cx', cx); homeGlow.setAttribute('cy', cy);
+  homeGlow.setAttribute('r','14'); homeGlow.setAttribute('fill','#f0a830'); homeGlow.setAttribute('opacity','0.1');
+  svg.appendChild(homeGlow);
+  const home = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  home.setAttribute('cx', cx); home.setAttribute('cy', cy);
+  home.setAttribute('r','5'); home.setAttribute('fill','#f0a830'); home.setAttribute('opacity','0.9');
+  svg.appendChild(home);
+
+  document.getElementById(labelId).textContent = `연결된 인프라: ${connected} / ${infra.length}개`;
+}
+
+function updateConstellation(speed) {
+  drawConstellation('const-a', DONG_DATA.hyehwa.infra, speed, 'const-a-label');
+  drawConstellation('const-b', DONG_DATA.junggye.infra, speed, 'const-b-label');
+}
+
+/* ════════════════════════════════════════════
+   패널 3: 사라지는 그림자 (Chart.js)
+   ════════════════════════════════════════════ */
+function initShadowChart() {
+  const ctx = document.getElementById('shadow-chart').getContext('2d');
+
+  // 잔상 데이터 (사라진 점포)
+  const ghost = BANK_DATA.counts.map(c => BANK_DATA.counts[0] - c);
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: BANK_DATA.years,
+      datasets: [
+        {
+          label: '현존 점포',
+          data: BANK_DATA.counts,
+          backgroundColor: BANK_DATA.years.map((y,i) => {
+            const ratio = BANK_DATA.counts[i] / BANK_DATA.counts[0];
+            const alpha = 0.3 + ratio * 0.5;
+            return `rgba(74,158,255,${alpha})`;
+          }),
+          borderColor: 'rgba(74,158,255,0.5)',
+          borderWidth: 0.5,
+          borderRadius: 2,
+        },
+        {
+          label: '사라진 점포 (잔상)',
+          data: ghost,
+          backgroundColor: BANK_DATA.years.map((y,i) => {
+            const ratio = ghost[i] / BANK_DATA.counts[0];
+            return `rgba(240,168,48,${Math.min(ratio * 0.6, 0.35)})`;
+          }),
+          borderColor: 'rgba(240,168,48,0.2)',
+          borderWidth: 0.5,
+          borderRadius: 2,
+          stack: 'shadow',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#15161c',
+          borderColor: 'rgba(255,255,255,0.1)',
+          borderWidth: 1,
+          titleColor: '#8a8880',
+          bodyColor: '#e8e6e0',
+          titleFont: { family: "'IBM Plex Mono'", size: 10 },
+          bodyFont: { family: "'IBM Plex Mono'", size: 11 },
+          callbacks: {
+            title: items => items[0].label + '년',
+            label: item => item.dataset.label + ': ' + item.raw.toLocaleString() + '개',
+          }
+        }
+      },
+      scales: {
+        x: {
+          stacked: true,
+          ticks: { color: '#555350', font: { family: "'IBM Plex Mono'", size: 10 } },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          border: { color: 'rgba(255,255,255,0.07)' },
+        },
+        y: {
+          stacked: true,
+          ticks: {
+            color: '#555350',
+            font: { family: "'IBM Plex Mono'", size: 10 },
+            callback: v => v.toLocaleString(),
+          },
+          grid: { color: 'rgba(255,255,255,0.04)' },
+          border: { color: 'rgba(255,255,255,0.07)' },
+          max: 8000,
+        }
+      }
+    }
+  });
+}
+
+/* ════════════════════════════════════════════
+   패널 4: 0.70 m/s 긴장감
+   ════════════════════════════════════════════ */
+function updateTension(speed) {
+  const legalDist = LEGAL_SPEED * GREEN_TIME;
+  const actualDist = speed * GREEN_TIME;
+  const gap = legalDist - actualDist;
+  const actualPct = (actualDist / legalDist * 100).toFixed(1);
+  const gapPct = (gap / legalDist * 100).toFixed(1);
+
+  document.getElementById('actual-speed-label').textContent = '실제 속도 ' + speed.toFixed(2);
+  document.getElementById('tension-actual-bar').style.width = Math.min(actualPct, 100) + '%';
+  document.getElementById('tension-actual-m').textContent = actualDist.toFixed(0) + 'm';
+  document.getElementById('tension-gap-fill').style.width = Math.max(0, gapPct) + '%';
+  document.getElementById('tension-gap-m').textContent = gap > 0 ? '−' + gap.toFixed(0) + 'm' : '+' + Math.abs(gap).toFixed(0) + 'm';
+
+  // 노이즈 SVG
+  const svgW = 500;
+  const actualW = Math.min(actualDist / legalDist * svgW, svgW);
+  document.getElementById('noise-actual-rect').setAttribute('width', actualW.toFixed(1));
+  document.getElementById('noise-actual-txt').textContent = speed.toFixed(2) + ' m/s — 실제 속도';
+  document.getElementById('noise-gap-line').setAttribute('x1', actualW.toFixed(1));
+  document.getElementById('noise-v1').setAttribute('x1', actualW.toFixed(1));
+  document.getElementById('noise-v1').setAttribute('x2', actualW.toFixed(1));
+  const midX = ((actualW + svgW) / 2).toFixed(1);
+  document.getElementById('noise-pct').setAttribute('x', midX);
+  document.getElementById('noise-pct').textContent = gap > 0 ? '−' + gapPct + '%' : '충족';
+  document.getElementById('noise-pct').setAttribute('fill', gap > 0 ? '#e85555' : '#3ecfa0');
+
+  // 노이즈 선
+  const noiseSvg = document.getElementById('noise-lines');
+  noiseSvg.innerHTML = '';
+  if (gap > 0) {
+    const intensity = Math.min(gap / 8, 1);
+    const count = Math.floor(intensity * 20) + 5;
+    for (let i = 0; i < count; i++) {
+      const lx1 = actualW + Math.random() * (svgW - actualW) * 0.4;
+      const lx2 = actualW + (svgW - actualW) * (0.4 + Math.random() * 0.6);
+      const ly = 8 + Math.random() * 44;
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', lx1.toFixed(1)); line.setAttribute('y1', ly.toFixed(1));
+      line.setAttribute('x2', lx2.toFixed(1)); line.setAttribute('y2', (ly + (Math.random()-0.5)*6).toFixed(1));
+      line.setAttribute('stroke', '#e85555');
+      line.setAttribute('stroke-width', (0.4 + Math.random() * 0.8).toFixed(2));
+      line.setAttribute('opacity', (0.15 + intensity * 0.4).toFixed(2));
+      noiseSvg.appendChild(line);
+    }
+  }
+}
+
+/* 횡단보도 시뮬레이션 */
+let simTimer = null;
+function runCrossingSim() {
+  if (simTimer) { clearInterval(simTimer); simTimer = null; }
+  const speed = getSpeed();
+  const roadEl = document.getElementById('cw-legal').parentElement;
+  const roadPx = roadEl.offsetWidth - 18;
+
+  document.getElementById('cw-legal').style.left = '2px';
+  document.getElementById('cw-actual').style.left = '2px';
+  document.getElementById('sim-result').textContent = '신호 시작...';
+
+  let elapsed = 0;
+  simTimer = setInterval(() => {
+    elapsed += 100;
+    const t = elapsed / 1000;
+    const lPos = Math.min(t * LEGAL_SPEED / ROAD_WIDTH * roadPx, roadPx);
+    const aPos = Math.min(t * speed / ROAD_WIDTH * roadPx, roadPx);
+    document.getElementById('cw-legal').style.left = (lPos + 2) + 'px';
+    document.getElementById('cw-actual').style.left = (aPos + 2) + 'px';
+
+    if (elapsed >= GREEN_TIME * 1000) {
+      const actualDist = (speed * GREEN_TIME).toFixed(1);
+      const shortfall = (ROAD_WIDTH - speed * GREEN_TIME).toFixed(1);
+      const crossed = speed * GREEN_TIME >= ROAD_WIDTH;
+      document.getElementById('sim-result').textContent = crossed
+        ? '통과 완료'
+        : `노인 보행자: ${actualDist}m 이동, ${shortfall}m 잔여 — 미통과`;
+      clearInterval(simTimer); simTimer = null;
+    }
+  }, 100);
+}
+
+/* ════════════════════════════════════════════
+   풀 폭 패널: 서울 25개 구 보행권 지수
+   ════════════════════════════════════════════ */
+function renderGuGrid() {
+  const grid = document.getElementById('gu-grid');
+  grid.innerHTML = '';
+  const sorted = [...GU_DATA].sort((a,b) => b.score - a.score);
+
+  sorted.forEach(gu => {
+    const pct = gu.score;
+    const color = pct >= 65 ? '#3ecfa0' : pct >= 55 ? '#4a9eff' : pct >= 45 ? '#f0a830' : '#e85555';
+    const card = document.createElement('div');
+    card.className = 'gu-card';
+    card.innerHTML = `
+      <div class="gu-name">${gu.name}</div>
+      <div class="gu-bar-track">
+        <div class="gu-bar-fill" style="width:${pct}%;background:${color};"></div>
+      </div>
+      <div class="gu-score" style="color:${color};">${pct}</div>
+      <div class="gu-elder">노인 비율 ${gu.elderPct}%</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ════════════════════════════════════════════
+   초기화
+   ════════════════════════════════════════════ */
+initShadowChart();
+renderGuGrid();
+onSpeedChange();
+</script>
+</body>
+</html>
