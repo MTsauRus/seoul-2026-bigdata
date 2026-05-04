@@ -252,7 +252,7 @@ html, body { height:100%; background:var(--bg); color:var(--text);
       <span class="tag">260418</span>
     </div>
     <div class="iframe-wrap" id="wrap-1">
-      <iframe src="../260418_submit/outputs/05_folium_map.html" loading="lazy"
+      <iframe src="../outputs/260418/05_folium_map.html" loading="lazy"
               title="보행 도달권 격차 지도" data-title="보행 도달권 격차 지도"></iframe>
       <div class="iframe-overlay" onclick="activateFrame('wrap-1')">
         <span>클릭하여 인터랙션 활성화</span>
@@ -282,7 +282,7 @@ html, body { height:100%; background:var(--bg); color:var(--text);
       <span class="tag">260418</span>
     </div>
     <div class="iframe-wrap" id="wrap-2">
-      <iframe src="../260418_submit/outputs/06_seoul_loss_map.html" loading="lazy"
+      <iframe src="../outputs/260418/06_seoul_loss_map.html" loading="lazy"
               title="보행권 손실률 지도" data-title="보행권 손실률 지도"></iframe>
       <div class="iframe-overlay" onclick="activateFrame('wrap-2')">
         <span>클릭하여 인터랙션 활성화</span>
@@ -312,7 +312,7 @@ html, body { height:100%; background:var(--bg); color:var(--text);
       <span class="tag">260418</span>
     </div>
     <div class="iframe-wrap" id="wrap-3">
-      <iframe src="../260418_submit/outputs/07c_priority_map.html" loading="lazy"
+      <iframe src="../outputs/260418/07c_priority_map.html" loading="lazy"
               title="보행권 우선 개입 지도" data-title="보행권 우선 개입 지도"></iframe>
       <div class="iframe-overlay" onclick="activateFrame('wrap-3')">
         <span>클릭하여 인터랙션 활성화</span>
@@ -342,7 +342,7 @@ html, body { height:100%; background:var(--bg); color:var(--text);
       <span class="tag">260420</span>
     </div>
     <div class="iframe-wrap" id="wrap-4">
-      <iframe src="../260420_submit/outputs/05_a1_dual_isochrone_260420.html" loading="lazy"
+      <iframe src="../outputs/260420/05_a1_dual_isochrone_260420.html" loading="lazy"
               title="다점 비교 등시선" data-title="다점 비교 등시선"></iframe>
       <div class="iframe-overlay" onclick="activateFrame('wrap-4')">
         <span>클릭하여 인터랙션 활성화</span>
@@ -372,7 +372,7 @@ html, body { height:100%; background:var(--bg); color:var(--text);
       <span class="tag">260420</span>
     </div>
     <div class="iframe-wrap" id="wrap-5">
-      <iframe src="../260420_submit/outputs/06_b1_heat_shelter_260420.html" loading="lazy"
+      <iframe src="../outputs/260420/06_b1_heat_shelter_260420.html" loading="lazy"
               title="폭염쉼터 노인 보행 접근성" data-title="폭염쉼터 노인 보행 접근성"></iframe>
       <div class="iframe-overlay" onclick="activateFrame('wrap-5')">
         <span>클릭하여 인터랙션 활성화</span>
@@ -403,7 +403,7 @@ html, body { height:100%; background:var(--bg); color:var(--text);
       <span class="tag">260420</span>
     </div>
     <div class="iframe-wrap" id="wrap-6">
-      <iframe src="../260420_submit/outputs/07_b2_cold_shelter_260420.html" loading="lazy"
+      <iframe src="../outputs/260420/07_b2_cold_shelter_260420.html" loading="lazy"
               title="한파쉼터 노인 보행 접근성" data-title="한파쉼터 노인 보행 접근성"></iframe>
       <div class="iframe-overlay" onclick="activateFrame('wrap-6')">
         <span>클릭하여 인터랙션 활성화</span>
@@ -434,9 +434,68 @@ html, body { height:100%; background:var(--bg); color:var(--text);
       <span class="tag">260421</span>
     </div>
     <div class="iframe-wrap" id="wrap-7">
-      <iframe src="../260421_submit/outputs/10_b3_snow_icing_v3_260421.html" loading="lazy"
+      <iframe src="../outputs/260421/10_b3_snow_icing_v3_260421.html" loading="lazy"
               title="겨울 결빙 취약지점" data-title="겨울 결빙 취약지점"></iframe>
       <div class="iframe-overlay" onclick="activateFrame('wrap-7')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="card cat-a" data-cat="a">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">8</div>
+      <div class="card-meta">
+        <div class="card-title">수축하는 시간 — 속도별 도달권 애니메이션</div>
+        <div class="card-sub">4개 속도 그룹 cross-fade · 5개 출발지 · 15/30/45분 슬라이더</div>
+        <div class="card-desc">
+          일반인(1.28 m/s) → 일반 노인(1.12) → 보행보조 노인(0.88) → 보행보조 하위 15%(0.70) 순으로
+          30분 도달권이 파란색에서 빨간색으로 축소되는 과정을 convex hull 애니메이션으로 체험한다.
+          5개 지점 선택 드롭다운과 시간 슬라이더로 서울 각지의 격차를 비교할 수 있다.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">cross-fade 애니메이션</span>
+      <span class="tag">convex hull</span>
+      <span class="tag">4속도 그룹</span>
+      <span class="tag">260428</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-8">
+      <iframe src="../outputs/260428/12_a1_shrinking_time_260428.html" loading="lazy"
+              title="수축하는 시간" data-title="수축하는 시간 — 속도별 도달권 애니메이션"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-8')">
+        <span>클릭하여 인터랙션 활성화</span>
+      </div>
+    </div>
+  </article>
+
+  <article class="card cat-b" data-cat="b">
+    <div class="card-top"></div>
+    <div class="card-hdr" onclick="expand(this)">
+      <div class="card-num">9</div>
+      <div class="card-meta">
+        <div class="card-title">기후 재난 통합 대시보드 — 폭염쉼터 · 한파쉼터 · 겨울 결빙</div>
+        <div class="card-sub">4속도 그룹별 접근성 분석 · 15/30분 시간 필터 · Chart.js 비교 차트</div>
+        <div class="card-desc">
+          폭염쉼터(4,107개)·한파쉼터(1,642개)의 행정동별 보행 접근성을 4개 속도 그룹(1.28/1.12/0.88/0.70 m/s)×
+          2개 시간 기준(15/30분)으로 교차 분석. 겨울 결빙 취약 구역(제설함 100m/200m 사각지대)도 탭 전환으로 확인.
+        </div>
+      </div>
+      <div class="expand-btn" title="전체화면">⤢</div>
+    </div>
+    <div class="card-tags">
+      <span class="tag">4속도 그룹</span>
+      <span class="tag">multi-source Dijkstra</span>
+      <span class="tag">Chart.js</span>
+      <span class="tag">260428</span>
+    </div>
+    <div class="iframe-wrap" id="wrap-9">
+      <iframe src="../outputs/260428/13_b_climate_dashboard_260428.html" loading="lazy"
+              title="기후 재난 통합 대시보드" data-title="기후 재난 통합 대시보드"></iframe>
+      <div class="iframe-overlay" onclick="activateFrame('wrap-9')">
         <span>클릭하여 인터랙션 활성화</span>
       </div>
     </div>

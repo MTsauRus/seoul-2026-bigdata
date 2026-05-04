@@ -22,6 +22,7 @@ dashboard/
   ../260420_submit/outputs/06_b1_heat_shelter_260420.html
   ../260420_submit/outputs/07_b2_cold_shelter_260420.html
   ../260421_submit/outputs/10_b3_snow_icing_v3_260421.html
+  ../outputs/260428/12_a1_shrinking_time_260428.html
 ```
 
 **반응형 레이아웃**:
@@ -210,13 +211,52 @@ single_source_dijkstra → 도달 노드 → concave_hull(ratio=0.05)
 
 ---
 
+### 8. 수축하는 시간 — 속도별 도달권 애니메이션
+**파일**: `outputs/260428/12_a1_shrinking_time_260428.html`  
+**라이브러리**: Leaflet + requestAnimationFrame  
+**작업일**: 260428
+
+#### 구현 방법
+
+```
+4개 속도 그룹 × 5개 출발지 × 3개 시간대 = 60개 등시선
+  g0: 일반인 (1.28 m/s)
+  g1: 일반 노인 (1.12 m/s)
+  g2: 보행보조 노인 (0.88 m/s)
+  g3: 보행보조 하위 15% (0.70 m/s)
+
+single_source_dijkstra → 도달 노드 → convex_hull (EPSG:5186 투영)
+  → WGS84 역변환 → GeoJSON dict → 60개 JS const로 인라인 임베딩
+
+cross-fade 애니메이션 (requestAnimationFrame):
+  fromLayer.setStyle({fillOpacity: FILL*(1-t), opacity: STROKE*(1-t)})
+  nextLayer.setStyle({fillOpacity: FILL*t,     opacity: STROKE*t})
+  → g0→g1→g2→g3→g0 순환, 1.5초 페이드
+
+컨트롤:
+  - 지점 선택 드롭다운 (5개 출발지)
+  - 시간 슬라이더 (15 / 30 / 45분)
+  - 일시정지 / 재개 버튼
+  - 하단 면적 스탯 바 (4개 속도별 km² 실시간 표시)
+```
+
+**캐시**: `cache/260428/isochrones_anim_260428.json` (convex_hull 방식으로 전체 재계산)
+
+#### 의미
+
+숫자로 보면 와닿지 않는 속도 차이를 공간이 "수축하는" 시각 경험으로 전달한다. 같은 30분이어도 파란 원이 빨간 원으로 줄어드는 장면이 핵심 메시지다. 지점별로 비교하면 강남(삼성역) 평지는 수축 폭이 작고, 강북(미아역)·관악(신림동) 구릉지는 수축 폭이 커서 지형 조건이 격차를 얼마나 증폭시키는지 직관적으로 드러난다.
+
+---
+
 ## 데이터 흐름 요약
 
 ```
 OSM 보행 그래프
-  (102,200 노드, 서울 전역)
+  (162,440 노드, 서울 전역)
         │
         ├─ Dijkstra ─→ 등시선 폴리곤  →  [1] 격차지도, [2] 손실률, [3] 우선순위, [4] 다점비교
+        │
+        ├─ convex_hull 60개 등시선   →  [8] 수축하는 시간 애니메이션
         │
         └─ 노드 스냅 + 멀티소스 Dijkstra
                ├─ 폭염쉼터 4,107개 →  [5] 더위쉼터 접근성

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>산산조각 — 서울 노인의 보행권</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+body{background:#06111e;color:#dde6f0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+#hdr{background:#060e1a;border-bottom:1px solid #0e1f30;
+  padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+#hdr h1{font-size:.95rem;font-weight:700}
+#hdr .sub{font-size:.63rem;color:#3a5368;margin-top:2px}
+.ctrl{display:flex;align-items:center;gap:10px}
+select{background:#0a1828;color:#7a99b0;border:1px solid #1a2c3e;border-radius:5px;padding:4px 8px;font-size:.7rem}
+.tpill{padding:3px 9px;border-radius:999px;font-size:.65rem;cursor:pointer;
+  border:1px solid #1a2c3e;background:transparent;color:#3a5368;transition:.15s}
+.tpill.on{border-color:rgba(255,255,255,.25);color:#aec4d4;background:rgba(255,255,255,.04)}
+
+#map-wrap{flex:1;position:relative;overflow:hidden}
+#map{position:absolute;inset:0}
+/* 파편 캔버스: 지도 위 */
+#shard-cv{position:absolute;inset:0;pointer-events:none;z-index:600}
+
+/* 우측 패널 */
+#panel{
+  position:absolute;top:14px;right:14px;z-index:700;width:200px;
+  background:rgba(6,14,26,.88);border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;padding:14px;backdrop-filter:blur(10px);
+}
+.ptl{font-size:.6rem;color:#3a5368;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.srow{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:7px;
+  border:1px solid transparent;margin-bottom:4px;cursor:pointer;transition:all .35s;opacity:.28}
+.srow.active{opacity:1;border-color:var(--c);background:color-mix(in srgb,var(--c) 10%,transparent)}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--c);flex-shrink:0}
+.sname{font-size:.7rem;color:#c9d9e8;line-height:1.2}
+.smps{font-size:.58rem;color:#3a5368}
+.sratio{font-size:.72rem;font-weight:700;color:var(--c);margin-left:auto}
+
+/* 하단 손실 텍스트 */
+#loss-banner{
+  position:absolute;bottom:0;left:0;right:0;z-index:650;
+  padding:20px 24px 16px;
+  background:linear-gradient(transparent,rgba(6,14,26,.9) 50%);
+  pointer-events:none;
+}
+#loss-big{font-size:3rem;font-weight:900;line-height:1;transition:color .5s;
+  text-shadow:0 0 40px currentColor}
+#loss-lbl{font-size:.72rem;color:#3a5368;margin-top:4px}
+
+/* 재생 */
+#play-wrap{
+  position:absolute;bottom:16px;right:228px;z-index:700;
+  display:flex;gap:6px;align-items:center;
+}
+#play-btn{width:36px;height:36px;border-radius:50%;
+  border:1.5px solid #243548;background:rgba(59,130,246,.1);
+  color:#3b82f6;font-size:.85rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:.2s}
+#play-btn.playing{border-color:#34A853;color:#34A853;background:rgba(52,168,83,.1)}
+.dots{display:flex;gap:4px;align-items:center}
+.dot{width:6px;height:6px;border-radius:50%;background:#1a2c3e;transition:all .3s;cursor:pointer}
+.dot.on{background:var(--c);box-shadow:0 0 6px var(--c)}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div>
+    <h1>산산조각</h1>
+    <div class="sub">보행 속도가 느려질수록 도달권이 파편이 되어 사라진다</div>
+  </div>
+  <div class="ctrl">
+    <div style="display:flex;gap:4px">
+      <button class="tpill" onclick="setTime(15,this)">15분</button>
+      <button class="tpill on" onclick="setTime(30,this)">30분</button>
+      <button class="tpill" onclick="setTime(45,this)">45분</button>
+    </div>
+    <select id="sel-pt" onchange="onPtChange()"></select>
+  </div>
+</div>
+
+<div id="map-wrap">
+  <div id="map"></div>
+  <canvas id="shard-cv"></canvas>
+
+  <div id="panel">
+    <div class="ptl">보행자 유형</div>
+    <div id="srows"></div>
+  </div>
+
+  <div id="loss-banner">
+    <div id="loss-big" style="color:#4285F4">100%</div>
+    <div id="loss-lbl">일반인 대비 도달 가능 면적 유지율</div>
+  </div>
+
+  <div id="play-wrap">
+    <div class="dots" id="dots"></div>
+    <button id="play-btn" onclick="togglePlay()">▶</button>
+  </div>
+</div>
+
+<script>
+// ── 데이터 ───────────────────────────────────────────────────────────────────
+const ISO={"p0":{"g0":{"15":{"type":"Polygon","coordinates":[[[126.99330310000002,37.5603265],[126.9887753,37.5612643],[126.9841258,37.5632921],[126.98229700000002,37.5641342],[126.9774622,37.5691023],[126.9767497,37.569863299999994],[126.9763864,37.57040430000001],[126.9768775,37.5765068],[126.9799885,37.5794023],[126.98362160000002,37.5822091],[126.98513040000002,37.5828059],[126.9877484,37.583088],[126.9881488,37.5830767],[126.9892329,37.5829215],[126.99341840000001,37.58188669999999],[127.00215260000002,37.5761203],[127.0042047,37.5734947],[127.00504400000001,37.571015599999996],[127.00453219999999,37.5697876],[126.9957098,37.5620311],[126.9938358,37.5606887],[126.99330310000002,37.5603265]]]},"30":{"type":"Polygon","coordinates":[[[126.998014,37.5510563],[126.97645920000001,37.55308900000001],[126.9722743,37.5559741],[126.9642966,37.5623151],[126.9635337,37.563430999999994],[126.96299550000002,37.5652535],[126.96117590000001,37.5725772],[126.9639197,37.5820936],[126.9662983,37.5844299],[126.975292,37.5902378],[126.97973150000001,37.5927855],[126.9811644,37.5927351],[126.9890279,37.5921732],[127.00192379999999,37.5900208],[127.0059776,37.58876889999999],[127.0063123,37.58859610000001],[127.0207999,37.5747515],[127.0208315,37.57469100000001],[127.0202983,37.5705677],[127.01955650000001,37.5683544],[127.0154718,37.5618931],[127.00965149999999,37.5582291],[126.998014,37.5510563]]]},"45":{"type":"Polygon","coordinates":[[[127.0048011,37.53756179999999],[126.9872172,37.5390766],[126.9870692,37.53909620000001],[126.9799593,37.540341100000006],[126.9738164,37.541579500000005],[126.970737,37.54247050000001],[126.96680409999999,37.5444607],[126.96550310000002,37.5451246],[126.95564080000001,37.5511115],[126.9550105,37.551776000000004],[126.95098779999998,37.55661380000001],[126.9490662,37.5596064],[126.9469379,37.5668996],[126.9504661,37.582282],[126.9527654,37.585209],[126.9617482,37.5963719],[126.9633726,37.59782620000001],[126.9759106,37.601091200000006],[126.991429,37.601073299999996],[126.99676210000001,37.6003923],[127.0140548,37.5978072],[127.01861290000001,37.5965564],[127.02037,37.59529],[127.03115220000001,37.5843244],[127.03681020000002,37.578312800000006],[127.03694949999999,37.57812479999999],[127.0359581,37.56610609999999],[127.033476,37.562640300000005],[127.0334377,37.56260110000001],[127.0191528,37.5483271],[127.0048011,37.53756179999999]]]}},"g1":{"15":{"type":"Polygon","coordinates":[[[126.9920474,37.5636867],[126.98782850000002,37.5641379],[126.98692990000002,37.564514499999994],[126.9864358,37.5648258],[126.983485,37.56711359999999],[126.9810187,37.5691802],[126.97931150000001,37.5713506],[126.97866799999998,37.57261319999999],[126.9800548,37.57581],[126.9817814,37.5772106],[126.9850196,37.57961619999999],[126.9876942,37.5796267],[126.99193500000001,37.5793848],[126.9923843,37.5792662],[126.999457,37.574540500000005],[127.0001927,37.5732134],[127.00110940000002,37.57087390000002],[127.0008993,37.5703379],[127.0008305,37.570183],[126.998034,37.5675962],[126.9953875,37.56532680000001],[126.99344059999999,37.56382510000001],[126.9920474,37.5636867]]]},"30":{"type":"Polygon","coordinates":[[[126.99611670000002,37.5549768],[126.9947536,37.5549903],[126.98429759999999,37.5567117],[126.98025000000001,37.558075699999996],[126.97893169999999,37.558660399999994],[126.977279,37.559478600000006],[126.97596060000001,37.5602564],[126.96883170000001,37.5681011],[126.96841000000002,37.5686444],[126.96838280000001,37.5686797],[126.96828500000001,37.5688131],[126.9681919,37.5689453],[126.96780040000002,37.57690199999999],[126.9697083,37.5790634],[126.97549600000002,37.584193400000004],[126.976161,37.5847233],[126.98166970000001,37.5881299],[126.98665640000002,37.5890198],[127.00063210000002,37.584748700000006],[127.0058651,37.5805326],[127.0071842,37.57939300000001],[127.013669,37.572569200000004],[127.0137032,37.572505400000004],[127.01355180000002,37.57155740000001],[127.0116512,37.5680001],[127.00981299999998,37.565325],[127.000377,37.557828],[126.99611670000002,37.5549768]]]},"45":{"type":"Polygon","coordinates":[[[126.99676270000002,37.54876779999999],[126.9775571,37.5492894],[126.9719593,37.551126200000006],[126.96154499999999,37.5590831],[126.96063559999999,37.5607718],[126.95864999999999,37.5648708],[126.9580212,37.5707989],[126.9579967,37.5743409],[126.958036,37.574850600000005],[126.961155,37.5840366],[126.96837710000001,37.5902796],[126.9698574,37.5909129],[126.9856248,37.594280899999994],[126.98992220000001,37.5951249],[127.0011156,37.593449199999995],[127.0078863,37.591936700000005],[127.0106433,37.59044160000001],[127.0253832,37.576339700000005],[127.0254014,37.5762944],[127.02542709999999,37.5762269],[127.02542,37.57389400000001],[127.0252822,37.571295600000006],[127.02385499999998,37.56778919999999],[127.0217124,37.5632862],[127.01969699999998,37.56057460000001],[127.0193532,37.560233200000006],[127.01096029999998,37.55437649999999],[126.99676270000002,37.54876779999999]]]}},
+"g2":{"15":{"type":"Polygon","coordinates":[[[126.9877429,37.56798680000001],[126.987545,37.5679912],[126.9871918,37.568195300000006],[126.9857526,37.56955899999999],[126.98527390000001,37.5702784],[126.98462549999999,37.57157080000001],[126.9839513,37.5733137],[126.9841016,37.57458119999999],[126.9864687,37.575872700000005],[126.9900163,37.5771895],[126.9903046,37.5772126],[126.9964641,37.5722314],[126.99672370000002,37.57195850000001],[126.9960062,37.57056420000001],[126.9952292,37.5696713],[126.9937252,37.5686346],[126.9930839,37.5683272],[126.9926376,37.568199500000006],[126.99243679999998,37.5681812],[126.9901521,37.5680381],[126.9877429,37.56798680000001]]]},"30":{"type":"Polygon","coordinates":[[[126.99318770000001,37.5611279],[126.9888839,37.561923799999995],[126.9852921,37.5632512],[126.98410029999998,37.56372330000001],[126.9825426,37.5649887],[126.9797921,37.5673446],[126.9772097,37.5698179],[126.97690109999999,37.570279600000006],[126.97690170000001,37.57041230000001],[126.9770615,37.575257],[126.9771535,37.5754152],[126.97802680000001,37.576610800000005],[126.97943669999998,37.578156400000005],[126.97957,37.57827580000001],[126.9807832,37.579266000000004],[126.98204740000001,37.5802856],[126.9843284,37.58186300000001],[126.98913069999999,37.58293230000001],[126.9892329,37.5829215],[126.9931443,37.58092640000001],[127.00108309999999,37.5760555],[127.0021168,37.57514350000001],[127.00392939999999,37.57110759999999],[127.00391110000001,37.5704353],[127.00315500000002,37.56952220000001],[127.00227110000002,37.5686563],[127.00038880000001,37.566863399999995],[126.9964613,37.56339729999999],[126.99394390000002,37.561641300000005],[126.99318770000001,37.5611279]]]},"45":{"type":"Polygon","coordinates":[[[126.9933309,37.55564510000001],[126.9799138,37.5593808],[126.9776459,37.56083600000001],[126.9700253,37.5689608],[126.9697253,37.5694537],[126.9692869,37.5759633],[126.9699109,37.576730700000006],[126.97162930000002,37.5785584],[126.9780635,37.584744900000004],[126.98168850000002,37.58638739999999],[126.9848619,37.58762900000001],[126.98618269999999,37.5876033],[126.992303,37.58639459999999],[126.99957600000002,37.5830449],[127.0019838,37.5817549],[127.003397,37.58093],[127.00770790000001,37.577580600000005],[127.0081173,37.577136900000006],[127.0084437,37.5767287],[127.0118655,37.57166479999999],[127.01134500000002,37.56995570000001],[127.00802629999998,37.5658963],[126.99986640000002,37.559170400000006],[126.99873149999999,37.5584081],[126.9953225,37.5561414],[126.9933309,37.55564510000001]]]}},
+"g3":{"15":{"type":"Polygon","coordinates":[[[126.98948990000001,37.5696929],[126.9878443,37.5701772],[126.9875853,37.5704615],[126.9862331,37.5729775],[126.98896570000001,37.5746219],[126.9897183,37.57485650000001],[126.99054140000001,37.5748597],[126.99259690000001,37.5737711],[126.99406700000002,37.5720391],[126.9936006,37.57087860000001],[126.9927048,37.57004930000001],[126.98948990000001,37.5696929]]]},"30":{"type":"Polygon","coordinates":[[[126.99268770000002,37.5658798],[126.98770049999999,37.5662184],[126.98453610000001,37.5686523],[126.9827905,37.5701472],[126.9818528,37.571603299999985],[126.9815336,37.5721691],[126.9828009,37.57534119999999],[126.98295680000001,37.5756319],[126.98307470000002,37.575834799999996],[126.9858367,37.57751600000001],[126.9891888,37.57875469999999],[126.9918575,37.57751950000001],[126.99757609999999,37.5735108],[126.99817230000001,37.57107280000002],[126.9982114,37.5704987],[126.99689440000002,37.56884189999999],[126.99268770000002,37.5658798]]]},"45":{"type":"Polygon","coordinates":[[[126.993174,37.56166120000001],[126.98890140000002,37.5626868],[126.9860828,37.563537399999994],[126.9851142,37.563849499999996],[126.98265860000001,37.5654269],[126.98058279999998,37.567311800000006],[126.9792757,37.56886560000002],[126.9791451,37.56902779999999],[126.97843270000001,37.570140699999996],[126.9770836,37.57258559999999],[126.97725810000001,37.57312530000001],[126.97863290000001,37.576619400000006],[126.97967789999998,37.577809699999996],[126.9827658,37.5800073],[126.98507470000001,37.581459],[126.9885206,37.58216610000001],[126.9931324,37.5806693],[127.0002233,37.57597570000001],[127.00133909999998,37.5749625],[127.002064,37.5738865],[127.00310940000001,37.5709874],[127.0027939,37.5697951],[126.99946350000002,37.5667652],[126.9961977,37.56399189999999],[126.993174,37.56166120000001]]]}}}};
+const AREAS={"p0":{"g0":{"15":4.3434,"30":18.062,"45":42.7554},"g1":{"15":2.4301,"30":10.5946,"45":23.7181},"g2":{"15":0.7826,"30":3.8793,"45":9.0374},"g3":{"15":0.2756,"30":1.4279,"45":3.4748}}};
+const PTS=[{"id":"p0","name":"종로 탑골공원","lon":126.9901,"lat":37.572}];
+const SPDS=[
+  {"id":"g0","mps":1.28,"label":"일반인","color":"#4285F4"},
+  {"id":"g1","mps":1.12,"label":"일반 노인","color":"#34A853"},
+  {"id":"g2","mps":0.88,"label":"보행보조 노인","color":"#FF8F00"},
+  {"id":"g3","mps":0.70,"label":"보행보조 하위 15%","color":"#C62828"}
+];
+
+// ── 지도 ─────────────────────────────────────────────────────────────────────
+const map=L.map('map',{center:[37.572,126.9901],zoom:13,zoomControl:false,minZoom:11,maxZoom:17,
+  attributionControl:false,zoomAnimation:false});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png',
+  {maxZoom:19,subdomains:'abcd'}).addTo(map);
+
+// ── 상태 ─────────────────────────────────────────────────────────────────────
+let curFrame=0,curTime=30,curPt='p0';
+let isPlaying=false,holdTimer=null;
+const HOLD=2800;
+let geoLayer=null;
+
+// ── 파편 시스템 ───────────────────────────────────────────────────────────────
+const cv=document.getElementById('shard-cv');
+const ctx=cv.getContext('2d');
+let shards=[];
+let shardRaf=null;
+let shardDone=true;
+
+function syncCv(){
+  const w=cv.parentElement.clientWidth,h=cv.parentElement.clientHeight;
+  if(w>0&&h>0&&(cv.width!==w||cv.height!==h)){cv.width=w;cv.height=h;}
+}
+window.addEventListener('resize',()=>{syncCv();});
+
+class Shard{
+  constructor(x,y,w,h,color,vx,vy){
+    this.x=x; this.y=y; this.w=w; this.h=h;
+    this.color=color;
+    this.vx=vx+(Math.random()-.5)*1.2;
+    this.vy=vy+Math.random()*1.5;
+    this.g=0.18+Math.random()*.1;
+    this.rot=Math.random()*Math.PI*2;
+    this.rotv=(Math.random()-.5)*.12;
+    this.alpha=0.85;
+    this.fade=0.013+Math.random()*.008;
+    // 삼각형 vs 사각형 다양화
+    this.pts=this._genPts();
+  }
+  _genPts(){
+    const hw=this.w/2,hh=this.h/2;
+    if(Math.random()<.4){
+      // 삼각형
+      return [[-hw,-hh],[hw,-hh*Math.random()],[0,hh]];
+    }
+    // 불규칙 사각형
+    const jit=()=>(Math.random()-.5)*.4;
+    return [[-hw+jit(),-hh+jit()],[hw+jit(),-hh+jit()],[hw+jit(),hh+jit()],[-hw+jit(),hh+jit()]];
+  }
+  update(){
+    this.vy+=this.g;
+    this.x+=this.vx;
+    this.y+=this.vy;
+    this.rot+=this.rotv;
+    this.alpha-=this.fade;
+  }
+  draw(c){
+    if(this.alpha<=0) return;
+    c.save();
+    c.globalAlpha=Math.max(0,this.alpha);
+    c.translate(this.x,this.y);
+    c.rotate(this.rot);
+    c.fillStyle=this.color;
+    c.strokeStyle='rgba(255,255,255,.15)';
+    c.lineWidth=.5;
+    c.beginPath();
+    this.pts.forEach(([px,py],i)=>i?c.lineTo(px,py):c.moveTo(px,py));
+    c.closePath();
+    c.fill();
+    c.stroke();
+    c.restore();
+  }
+}
+
+// 이전 폴리곤에서 새 폴리곤을 뺀 "사라지는 영역" 위의 격자점들 수집
+function spawnShardsForTransition(fromFrame, color){
+  const fromIso=ISO[curPt]?.[SPDS[fromFrame].id]?.[String(curTime)];
+  if(!fromIso) return;
+  const coords=fromIso.coordinates[0];
+
+  // 바운딩박스
+  let minLat=Infinity,maxLat=-Infinity,minLng=Infinity,maxLng=-Infinity;
+  coords.forEach(([lng,lat])=>{
+    minLat=Math.min(minLat,lat); maxLat=Math.max(maxLat,lat);
+    minLng=Math.min(minLng,lng); maxLng=Math.max(maxLng,lng);
+  });
+
+  // 격자 샘플링으로 폴리곤 내부 컨테이너 좌표 수집
+  const pts=[];
+  const steps=22;
+  for(let i=0;i<=steps;i++){
+    for(let j=0;j<=steps;j++){
+      const lat=minLat+(maxLat-minLat)*(i/steps);
+      const lng=minLng+(maxLng-minLng)*(j/steps);
+      if(pointInPoly(lat,lng,coords)){
+        const p=map.latLngToContainerPoint([lat,lng]);
+        pts.push([p.x,p.y]);
+      }
+    }
+  }
+
+  // 파편 생성: 중심점 향해 안쪽으로 폭발 (구심력)
+  const cx2=cv.width/2, cy2=cv.height/2;
+  pts.forEach(([px,py])=>{
+    // 중심에서 멀수록 강하게 날아가게
+    const dx=px-cx2, dy=py-cy2;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const force=(.5+Math.random()*.5);
+    const sz=6+Math.random()*14;
+    shards.push(new Shard(px,py,sz,sz*(.5+Math.random()),color,
+      (dx/dist)*force*1.8,
+      (dy/dist)*force*1.2+Math.random()*.8
+    ));
+  });
+}
+
+function pointInPoly(lat,lng,coords){
+  let inside=false;
+  for(let i=0,j=coords.length-1;i<coords.length;j=i++){
+    const [xi,yi]=coords[i];
+    const [xj,yj]=coords[j];
+    if(((yi>lat)!==(yj>lat))&&(lng<(xj-xi)*(lat-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+
+function runShards(){
+  if(shardRaf) cancelAnimationFrame(shardRaf);
+  // 캔버스 크기 한 번만 확인 (tick 내 syncCv 호출 금지 — 매 프레임 리셋됨)
+  syncCv();
+  const W=cv.width, H=cv.height;
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    shards=shards.filter(s=>s.alpha>0);
+    shards.forEach(s=>{s.update();s.draw(ctx);});
+    if(shards.length>0) shardRaf=requestAnimationFrame(tick);
+    else{shardDone=true;shardRaf=null;ctx.clearRect(0,0,W,H);}
+  }
+  shardRaf=requestAnimationFrame(tick);
+}
+
+// ── 지도 GeoJSON 레이어 ────────────────────────────────────────────────────
+function buildLayer(){
+  if(geoLayer) map.removeLayer(geoLayer);
+  const s=SPDS[curFrame];
+  const iso=ISO[curPt]?.[s.id]?.[String(curTime)];
+  if(!iso) return;
+  geoLayer=L.geoJSON(iso,{
+    style:{fillColor:s.color,fillOpacity:.25,color:s.color,weight:2,opacity:.8,
+      smoothFactor:0}
+  }).addTo(map);
+}
+
+// ── UI 업데이트 ──────────────────────────────────────────────────────────────
+function updateUI(){
+  const s=SPDS[curFrame];
+  const area0=AREAS[curPt]?.g0?.[String(curTime)]||1;
+  const areaI=AREAS[curPt]?.[s.id]?.[String(curTime)]||0;
+  const ratio=Math.round(areaI/area0*100);
+  const lb=document.getElementById('loss-big');
+  lb.textContent=ratio+'%';
+  lb.style.color=s.color;
+  lb.style.textShadow=`0 0 40px ${s.color}`;
+  document.getElementById('loss-lbl').textContent=
+    curFrame===0?`${areaI.toFixed(1)} km² 도달 가능 · 기준값`:
+    `${areaI.toFixed(1)} km² 도달 가능 · 일반인 대비 ${ratio}% 유지`;
+  document.querySelectorAll('.srow').forEach((r,i)=>r.classList.toggle('active',i===curFrame));
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.toggle('on',i===curFrame);
+    d.style.setProperty('--c',SPDS[i].color);
+  });
+}
+
+// ── 전환 ─────────────────────────────────────────────────────────────────────
+function goTo(newFrame){
+  if(newFrame>curFrame){
+    // 다운 전환: 파편 애니메이션
+    const prevColor=SPDS[curFrame].color;
+    spawnShardsForTransition(curFrame,prevColor);
+    runShards();
+  } else {
+    // 업 전환: 그냥 전환
+    shards=[];
+    if(shardRaf){cancelAnimationFrame(shardRaf);shardRaf=null;}
+    syncCv();ctx.clearRect(0,0,cv.width,cv.height);
+  }
+  curFrame=newFrame;
+  buildLayer();
+  updateUI();
+  if(isPlaying) scheduleNext();
+}
+
+function scheduleNext(){
+  clearTimeout(holdTimer);
+  holdTimer=setTimeout(()=>goTo((curFrame+1)%4),HOLD);
+}
+
+function togglePlay(){
+  isPlaying=!isPlaying;
+  const btn=document.getElementById('play-btn');
+  btn.textContent=isPlaying?'⏸':'▶';
+  btn.classList.toggle('playing',isPlaying);
+  if(isPlaying) scheduleNext();
+  else clearTimeout(holdTimer);
+}
+
+function setTime(t,btn){
+  curTime=t;
+  document.querySelectorAll('.tpill').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  shards=[]; if(shardRaf){cancelAnimationFrame(shardRaf);shardRaf=null;}
+  syncCv(); ctx.clearRect(0,0,cv.width,cv.height);
+  buildLayer(); updateUI();
+}
+
+function onPtChange(){
+  curPt=document.getElementById('sel-pt').value;
+  const pt=PTS.find(p=>p.id===curPt);
+  if(pt) map.setView([pt.lat,pt.lon],13,{animate:false});
+  shards=[]; if(shardRaf){cancelAnimationFrame(shardRaf);shardRaf=null;}
+  syncCv(); ctx.clearRect(0,0,cv.width,cv.height);
+  buildLayer(); updateUI();
+}
+
+// ── DOM 초기화 ───────────────────────────────────────────────────────────────
+const selPt=document.getElementById('sel-pt');
+PTS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name;selPt.appendChild(o);});
+
+const srowsEl=document.getElementById('srows');
+const dotsEl=document.getElementById('dots');
+SPDS.forEach((s,i)=>{
+  const area0=AREAS['p0']?.g0?.[String(curTime)]||1;
+  const areaI=AREAS['p0']?.[s.id]?.[String(curTime)]||0;
+  const div=document.createElement('div');
+  div.className='srow'; div.style.setProperty('--c',s.color);
+  div.innerHTML=`<div class="sdot"></div>
+    <div><div class="sname">${s.label}</div><div class="smps">${s.mps} m/s</div></div>
+    <div class="sratio">${Math.round(areaI/area0*100)}%</div>`;
+  div.onclick=()=>goTo(i);
+  srowsEl.appendChild(div);
+  const dot=document.createElement('div');
+  dot.className='dot'; dot.style.setProperty('--c',s.color);
+  dot.onclick=()=>goTo(i);
+  dotsEl.appendChild(dot);
+});
+
+map.whenReady(()=>requestAnimationFrame(()=>{
+  syncCv();
+  buildLayer();
+  updateUI();
+}));
+</script>
+</body>
+</html>
