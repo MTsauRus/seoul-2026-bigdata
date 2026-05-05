@@ -38,6 +38,8 @@ DEM 준비 (최초 1회):
 """
 
 import json, logging, math, time
+import multiprocessing
+multiprocessing.set_start_method('fork', force=True)
 from pathlib import Path
 import numpy as np
 import geopandas as gpd
@@ -142,7 +144,7 @@ if not DEM_PATH.exists():
     )
 
 log.info(f"노드 표고 추가 (DEM: {DEM_PATH.name}, SRTM ~30m)...")
-G = ox.elevation.add_node_elevations_raster(G, str(DEM_PATH))
+G = ox.elevation.add_node_elevations_raster(G, str(DEM_PATH), cpus=1)
 
 log.info("엣지별 경사도 계산...")
 G = ox.elevation.add_edge_grades(G)
