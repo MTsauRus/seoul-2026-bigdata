@@ -281,9 +281,9 @@ else:
     log.info(f"  reach: {REACH_CACHE.stat().st_size//1024} KB  hull: {HULL_CACHE.stat().st_size//1024} KB")
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# 6+7. GU 단위 — centroid Dijkstra로 reach + hull 동시 계산 (25회)
+# 6. GU 단위 reach — 동 단위 평균으로 집계 (17과 동일 방식, 비교 일관성 확보)
 # ═══════════════════════════════════════════════════════════════════════════════
-log.info("구 단위 centroid Dijkstra (reach + hull, 25회)...")
+log.info("구 단위 reach 집계 (동 평균)...")
 
 gu_pop = {}
 for gc_key, group in gdf.groupby("gu_code"):
@@ -291,6 +291,41 @@ for gc_key, group in gdf.groupby("gu_code"):
         "p65":   int(group["pop_65plus"].sum()),
         "total": int(group["pop_total"].sum()),
     }
+
+gu_dongs_map = {}
+for _, row in gdf.iterrows():
+    gu_dongs_map.setdefault(str(row["gu_code"]), []).append(str(row["adm_cd"]))
+
+reach_gu = {}
+for gc, dongs in gu_dongs_map.items():
+    reach_gu[gc] = {s["id"]: {} for s in SPEEDS}
+    for s in SPEEDS:
+        sid = s["id"]
+        for t in TIMES:
+            ts = str(t)
+            heat_v = [reach_dong[dc][sid][ts]["heat"] for dc in dongs
+                      if dc in reach_dong and ts in reach_dong[dc].get(sid, {})]
+            cold_v = [reach_dong[dc][sid][ts]["cold"] for dc in dongs
+                      if dc in reach_dong and ts in reach_dong[dc].get(sid, {})]
+            hm_v   = [reach_dong[dc][sid][ts]["heat_m"] for dc in dongs
+                      if dc in reach_dong
+                      and reach_dong[dc].get(sid, {}).get(ts, {}).get("heat_m") is not None]
+            cm_v   = [reach_dong[dc][sid][ts]["cold_m"] for dc in dongs
+                      if dc in reach_dong
+                      and reach_dong[dc].get(sid, {}).get(ts, {}).get("cold_m") is not None]
+            reach_gu[gc][sid][ts] = {
+                "heat":   round(sum(heat_v) / len(heat_v), 1) if heat_v else 0,
+                "cold":   round(sum(cold_v) / len(cold_v), 1) if cold_v else 0,
+                "heat_m": int(sum(hm_v) / len(hm_v)) if hm_v else None,
+                "cold_m": int(sum(cm_v) / len(cm_v)) if cm_v else None,
+            }
+
+log.info(f"  구 reach 집계 완료: {len(reach_gu)}개 구")
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# 7. GU 단위 hull — centroid Dijkstra (25회, 시각화 전용)
+# ═══════════════════════════════════════════════════════════════════════════════
+log.info("구 단위 Hull 계산 (centroid Dijkstra, 25회)...")
 
 gdf_gu_diss = gdf.dissolve(by="gu_code", as_index=False)
 gdf_gu_diss["geometry"] = gdf_gu_diss.geometry.simplify(0.0005)
@@ -300,7 +335,6 @@ gu_c_nodes = ox.nearest_nodes(
     G_ud, gdf_gu_diss["cx"].tolist(), gdf_gu_diss["cy"].tolist()
 )
 
-reach_gu     = {}
 hulls_gu     = {}
 gu_centroids = {}
 
@@ -315,12 +349,6 @@ for i, (_, row) in enumerate(gdf_gu_diss.iterrows()):
         G_ud, src, cutoff=MAX_DIST, weight="length"
     )
 
-    heat_dists = np.array([lengths.get(n, 999999.0) for n in heat_node_list])
-    cold_dists = np.array([lengths.get(n, 999999.0) for n in cold_node_list])
-    nearest_heat = float(heat_dists.min()) if heat_dists.size > 0 else 999999.0
-    nearest_cold = float(cold_dists.min()) if cold_dists.size > 0 else 999999.0
-
-    reach_gu[gc] = {s["id"]: {} for s in SPEEDS}
     hulls_gu[gc] = {str(t): {} for t in TIMES}
 
     if lengths:
@@ -339,12 +367,6 @@ for i, (_, row) in enumerate(gdf_gu_diss.iterrows()):
         for t in TIMES:
             ts = str(t)
             thresh = s["mps"] * t * 60
-            reach_gu[gc][sid][ts] = {
-                "heat":   int((heat_dists <= thresh).sum()),
-                "cold":   int((cold_dists <= thresh).sum()),
-                "heat_m": int(nearest_heat) if nearest_heat < 90000 else None,
-                "cold_m": int(nearest_cold) if nearest_cold < 90000 else None,
-            }
             if nd.size > 0:
                 mask   = nd <= thresh
                 coords = convex_hull_coords(ddx[mask], ddy[mask], fallback_r=thresh)
@@ -354,7 +376,7 @@ for i, (_, row) in enumerate(gdf_gu_diss.iterrows()):
 
     log.info(f"  [{i+1:02d}/25] {gc} done")
 
-log.info(f"  구 reach+hull 완료: {len(hulls_gu)}개 구")
+log.info(f"  구 hull 완료: {len(hulls_gu)}개 구")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 8. GeoJSON 생성
